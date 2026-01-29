@@ -23,9 +23,6 @@ func parseArgs(args []string) (*config, error) {
 	i := 0
 	if len(args) > 0 {
 		switch args[0] {
-		case "init":
-			cfg.command = "init"
-			i = 1
 		case "run":
 			cfg.command = "run"
 			i = 1
@@ -86,7 +83,6 @@ Usage: ralph [command] [--tool amp|claude] [max_iterations]
 
 Commands:
   run       Start the AI agent loop (default)
-  init      Initialize prd.json in current directory
   prompt    Print the prompt for a tool (claude or amp)
   skill     Print a skill instruction (prd or ralph)
   clean     Remove prd.json, progress.txt, and .ralph-branch
@@ -101,7 +97,6 @@ Arguments:
 
 Examples:
   ralph                    # Run with claude, 10 iterations
-  ralph init               # Create prd.json in current directory
   ralph clean              # Remove progress files
   ralph prompt claude      # Print the Claude prompt
   ralph prompt amp         # Print the Amp prompt
@@ -111,7 +106,7 @@ Examples:
   ralph --tool amp         # Run with amp, 10 iterations
 
 File Locations:
-  prd.json      Current working directory (created by 'ralph init')
+  prd.json      Current working directory
   progress.txt  Current working directory (created automatically)
   archive/      Current working directory (for archiving old runs)
 

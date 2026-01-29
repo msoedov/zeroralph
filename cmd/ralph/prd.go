@@ -10,28 +10,6 @@ import (
 	"time"
 )
 
-// Default prd.json template
-const defaultPRD = `{
-  "project": "MyProject",
-  "branchName": "ralph/feature",
-  "description": "Feature description",
-  "userStories": [
-    {
-      "id": "US-001",
-      "title": "First task",
-      "description": "As a developer, I need to implement...",
-      "acceptanceCriteria": [
-        "Acceptance criterion 1",
-        "Typecheck passes"
-      ],
-      "priority": 1,
-      "passes": false,
-      "notes": ""
-    }
-  ]
-}
-`
-
 type userStory struct {
 	ID                 string   `json:"id"`
 	Title              string   `json:"title"`
@@ -67,23 +45,6 @@ func loadPRD(workDir string) (*prd, bool, error) {
 	}
 
 	return &p, true, nil
-}
-
-func initPRD(workDir string) error {
-	prdPath := filepath.Join(workDir, "prd.json")
-
-	if _, err := os.Stat(prdPath); err == nil {
-		logInfo("prd.json already exists at %s", prdPath)
-		return nil
-	}
-
-	logInfo("Creating prd.json at %s", prdPath)
-	if err := os.WriteFile(prdPath, []byte(defaultPRD), 0644); err != nil {
-		return fmt.Errorf("writing prd.json: %w", err)
-	}
-
-	logSuccess("Created prd.json - edit it with your project details")
-	return nil
 }
 
 func initProgressFile(workDir string) error {
@@ -174,6 +135,19 @@ func archivePreviousRun(workDir string, p *prd) error {
 	logSuccess("Archived to: %s", archiveFolder)
 
 	return resetProgressFile(workDir)
+}
+
+func checkClaudeMD(workDir string) bool {
+	locations := []string{
+		filepath.Join(workDir, "CLAUDE.md"),
+		filepath.Join(workDir, ".claude", "CLAUDE.md"),
+	}
+	for _, path := range locations {
+		if _, err := os.Stat(path); err == nil {
+			return true
+		}
+	}
+	return false
 }
 
 func cleanWorkDir(workDir string) error {
