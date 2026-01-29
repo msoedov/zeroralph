@@ -22,6 +22,15 @@ func main() {
 	}
 	cfg.scriptDir = scriptDir
 
+	if cfg.command == "init" {
+		if err := initMissingFiles(scriptDir); err != nil {
+			logError("Initialization: %v", err)
+			os.Exit(1)
+		}
+		logSuccess("Workspace initialized successfully.")
+		os.Exit(0)
+	}
+
 	p, err := loadPRD(scriptDir)
 	if err != nil {
 		logError("%v", err)
@@ -45,9 +54,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	printBanner(cfg.tool, cfg.maxIterations, p.Project, p.BranchName, version)
+	printBanner(cfg.tool, cfg.maxIterations, p, version)
 
-	fmt.Printf("  %sloading%s  configuration\n", colorMuted, colorReset)
+	fmt.Printf("  %sforging%s  workspace\n", colorMuted, colorReset)
 	printStatusLine(statusLine{id: "prd", done: true})
 	printStatusLine(statusLine{id: "claude", done: true})
 	fmt.Println()

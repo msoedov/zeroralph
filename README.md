@@ -2,6 +2,8 @@
 
 Autonomous AI agent loop. Runs Claude or Amp in iterations until task completion.
 
+This is a Go reimplementation of [snarktank/ralph](https://github.com/snarktank/ralph), rewritten in Go for simplicity of setup and portability.
+
 ## Installation
 
 ### From releases
@@ -23,8 +25,13 @@ go build -o ralf ./cmd/ralf/
 ## Usage
 
 ```bash
-ralf [--tool amp|claude] [max_iterations]
+ralf [command] [--tool amp|claude] [max_iterations]
 ```
+
+### Commands
+
+- `run` - Start the AI agent loop (default)
+- `init` - Initialize workspace with templates (`prd.json`, `CLAUDE.md`, etc.)
 
 ### Options
 
@@ -40,21 +47,23 @@ ralf [--tool amp|claude] [max_iterations]
 
 ```bash
 ralf                    # Run with claude, 10 iterations
+ralf init               # Initialize workspace with templates
 ralf 20                 # Run with claude, 20 iterations
 ralf --tool amp         # Run with amp, 10 iterations
-ralf --tool amp 15      # Run with amp, 15 iterations
 ```
 
 ## Configuration
 
-ralf expects these files in the current directory:
+`ralf` is completely self-contained. It can initialize a new workspace using its embedded templates.
 
 - `prd.json` - Project configuration with fields:
   - `project` - Project name
   - `branchName` - Git branch name
-  - `description` - Task description
+  - `description` - Feature description
+  - `userStories` - List of tasks for the agent
 - `CLAUDE.md` - Instructions for Claude (when using `--tool claude`)
 - `prompt.md` - Instructions for Amp (when using `--tool amp`)
+- `AGENTS.md` - General guidelines for the agents
 
 ### prd.json example
 
@@ -62,46 +71,47 @@ ralf expects these files in the current directory:
 {
   "project": "my-project",
   "branchName": "feature/new-feature",
-  "description": "Implement the new feature"
+  "description": "Implement the new feature",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add database schema",
+      "description": "As a developer...",
+      "acceptanceCriteria": ["Table exists", "Typecheck passes"],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    }
+  ]
 }
 ```
 
 ## How it works
 
-1. Loads `prd.json` from current directory
+1. Loads `prd.json` from current directory (auto-initializes if missing or via `ralf init`)
 2. Archives previous run if branch changed
 3. Initializes `progress.txt` for tracking
 4. Runs the AI tool in a loop
 5. Checks output for `<promise>COMPLETE</promise>` marker
 6. Exits on completion or max iterations
 
-## Output files
-
-- `progress.txt` - Progress log updated by the AI
-- `archive/` - Previous runs archived by date and branch
-- `.last-branch` - Tracks the last used branch
-
 ## Compatibility
 
-ralf is a Go reimplementation of `scripts/ralph/ralph.sh`. It provides full feature parity plus enhancements:
+`ralf` provides full feature parity with the original scripts plus significant enhancements:
 
 | Feature | ralph.sh | ralf |
 |---------|----------|------|
 | Tool selection (`--tool amp\|claude`) | Yes | Yes |
 | Max iterations argument | Yes | Yes |
 | PRD loading (`prd.json`) | Yes | Yes |
+| User Stories support | Partially | **Full** |
 | Branch-based archiving | Yes | Yes |
 | Progress file initialization | Yes | Yes |
-| Completion detection (`<promise>COMPLETE</promise>`) | Yes | Yes |
-| 2-second sleep between iterations | Yes | Yes |
-| Output tee to stderr | Yes | Yes |
-| Exit codes (0 success, 1 max reached) | Yes | Yes |
-| `--version` flag | No | Yes |
-| `--help` flag | No | Yes |
-| ASCII banner | No | Yes |
-| Docker-style progress bar | No | Yes |
-| Spinner animation | No | Yes |
-| Colored output | No | Yes |
-| Elapsed time tracking | No | Yes |
+| Completion detection | Yes | Yes |
+| Explicit `init` command | No | **Yes** |
+| Self-contained (no external templates) | No | **Yes** |
+| ASCII banner & Status UI | No | **Yes** |
+| Docker-style progress & Spinner | No | **Yes** |
+| Colored output & Time tracking | No | **Yes** |
 
 Default tool changed from `amp` to `claude`.

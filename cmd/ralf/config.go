@@ -7,6 +7,7 @@ import (
 )
 
 type config struct {
+	command       string
 	tool          string
 	maxIterations int
 	scriptDir     string
@@ -14,11 +15,23 @@ type config struct {
 
 func parseArgs(args []string) (*config, error) {
 	cfg := &config{
+		command:       "run",
 		tool:          "claude",
 		maxIterations: 10,
 	}
 
 	i := 0
+	if len(args) > 0 {
+		switch args[0] {
+		case "init":
+			cfg.command = "init"
+			i = 1
+		case "run":
+			cfg.command = "run"
+			i = 1
+		}
+	}
+
 	for i < len(args) {
 		arg := args[i]
 		switch {
@@ -54,7 +67,11 @@ func parseArgs(args []string) (*config, error) {
 func printUsage() {
 	fmt.Println(`ralf - autonomous AI agent loop
 
-Usage: ralf [--tool amp|claude] [max_iterations]
+Usage: ralf [command] [--tool amp|claude] [max_iterations]
+
+Commands:
+  run   Start the AI agent loop (default)
+  init  Initialize workspace with templates (prd.json, CLAUDE.md, etc.)
 
 Options:
   --tool     AI tool to use: amp or claude (default: claude)
@@ -66,9 +83,9 @@ Arguments:
 
 Examples:
   ralf                    # Run with claude, 10 iterations
+  ralf init               # Initialize workspace
   ralf 20                 # Run with claude, 20 iterations
-  ralf --tool amp         # Run with amp, 10 iterations
-  ralf --tool amp 15      # Run with amp, 15 iterations`)
+  ralf --tool amp         # Run with amp, 10 iterations`)
 }
 
 func getScriptDir() (string, error) {

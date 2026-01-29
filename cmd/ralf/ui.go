@@ -136,7 +136,7 @@ func progressBar(current, total int, width int) string {
 	return fmt.Sprintf("%s %3d%%", bar, percent)
 }
 
-func printBanner(tool string, maxIter int, project, branch, ver string) {
+func printBanner(tool string, maxIter int, p *prd, ver string) {
 	fmt.Printf("\n%s", colorOrcIron)
 	fmt.Println(`             /\          /\          /\`)
 	fmt.Printf("      ______/  \\________/  \\________/  \\______\n")
@@ -149,10 +149,24 @@ func printBanner(tool string, maxIter int, project, branch, ver string) {
 	fmt.Printf("      \\______    ________    ________    ______/\n")
 	fmt.Println(`             \/          \/          \/`)
 	fmt.Printf("%s\n", colorReset)
-	fmt.Printf("  %s[TOOL]%s %s%s%s\n", colorMuted, colorReset, colorBold, tool, colorReset)
-	fmt.Printf("  %s[PROJECT]%s  %s\n", colorMuted, colorReset, project)
-	fmt.Printf("  %s[BRANCH]%s     %s%s%s\n", colorMuted, colorReset, colorOrcGold, branch, colorReset)
+	fmt.Printf("  %s[WARCHIEF]%s %s%s%s (v%s)\n", colorMuted, colorReset, colorBold, tool, colorReset, ver)
+	fmt.Printf("  %s[MISSION]%s  %s\n", colorMuted, colorReset, p.Project)
+	fmt.Printf("  %s[CLAN]%s     %s%s%s\n", colorMuted, colorReset, colorOrcGold, p.BranchName, colorReset)
 	fmt.Printf("  %s[LIMIT]%s    %d\n\n", colorMuted, colorReset, maxIter)
+
+	if len(p.UserStories) > 0 {
+		fmt.Printf("  %sTASKS:%s\n", colorBold, colorReset)
+		for _, s := range p.UserStories {
+			status := " "
+			if s.Passes {
+				status = fmt.Sprintf("%s✔%s", colorSuccess, colorReset)
+			} else {
+				status = fmt.Sprintf("%s○%s", colorOrcIron, colorReset)
+			}
+			fmt.Printf("    [%s] %-8s %s\n", status, s.ID, s.Title)
+		}
+		fmt.Println()
+	}
 }
 
 func logInfo(format string, args ...any) {

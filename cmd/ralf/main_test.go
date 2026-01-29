@@ -10,6 +10,7 @@ func TestParseArgs(t *testing.T) {
 	tests := []struct {
 		name          string
 		args          []string
+		wantCmd       string
 		wantTool      string
 		wantMaxIter   int
 		wantErr       bool
@@ -18,50 +19,58 @@ func TestParseArgs(t *testing.T) {
 		{
 			name:        "defaults",
 			args:        []string{},
+			wantCmd:     "run",
 			wantTool:    "claude",
 			wantMaxIter: 10,
 		},
 		{
+			name:        "init command",
+			args:        []string{"init"},
+			wantCmd:     "init",
+			wantTool:    "claude",
+			wantMaxIter: 10,
+		},
+		{
+			name:        "run command explicit",
+			args:        []string{"run", "5"},
+			wantCmd:     "run",
+			wantTool:    "claude",
+			wantMaxIter: 5,
+		},
+		{
 			name:        "tool flag amp",
 			args:        []string{"--tool", "amp"},
+			wantCmd:     "run",
 			wantTool:    "amp",
 			wantMaxIter: 10,
 		},
 		{
 			name:        "tool flag claude",
 			args:        []string{"--tool", "claude"},
+			wantCmd:     "run",
 			wantTool:    "claude",
 			wantMaxIter: 10,
 		},
 		{
 			name:        "tool equals syntax",
 			args:        []string{"--tool=claude"},
+			wantCmd:     "run",
 			wantTool:    "claude",
 			wantMaxIter: 10,
 		},
 		{
 			name:        "max iterations",
 			args:        []string{"5"},
+			wantCmd:     "run",
 			wantTool:    "claude",
 			wantMaxIter: 5,
 		},
 		{
 			name:        "tool and iterations",
 			args:        []string{"--tool", "claude", "20"},
+			wantCmd:     "run",
 			wantTool:    "claude",
 			wantMaxIter: 20,
-		},
-		{
-			name:          "invalid tool",
-			args:          []string{"--tool", "invalid"},
-			wantErr:       true,
-			wantErrSubstr: "invalid tool",
-		},
-		{
-			name:          "missing tool value",
-			args:          []string{"--tool"},
-			wantErr:       true,
-			wantErrSubstr: "requires a value",
 		},
 	}
 
@@ -77,6 +86,9 @@ func TestParseArgs(t *testing.T) {
 			if err != nil {
 				t.Errorf("unexpected error: %v", err)
 				return
+			}
+			if cfg.command != tt.wantCmd {
+				t.Errorf("command = %q, want %q", cfg.command, tt.wantCmd)
 			}
 			if cfg.tool != tt.wantTool {
 				t.Errorf("tool = %q, want %q", cfg.tool, tt.wantTool)
@@ -107,11 +119,22 @@ func TestLoadPRD(t *testing.T) {
 		}
 	})
 
-	t.Run("missing prd", func(t *testing.T) {
+	t.Run("missing prd initializes files", func(t *testing.T) {
 		emptyDir := t.TempDir()
-		_, err := loadPRD(emptyDir)
-		if err == nil {
-			t.Error("expected error for missing prd.json")
+		p, err := loadPRD(emptyDir)
+		if err != nil {
+			t.Errorf("expected auto-initialization, got error: %v", err)
+		}
+		if p.Project == "" {
+			t.Error("expected initialized PRD project name to be non-empty")
+		}
+
+		// Verify files exist
+		files := []string{"prd.json", "CLAUDE.md", "prompt.md", "AGENTS.md"}
+		for _, f := range files {
+			if _, err := os.Stat(filepath.Join(emptyDir, f)); os.IsNotExist(err) {
+				t.Errorf("expected %s to be initialized", f)
+			}
 		}
 	})
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,19 +11,36 @@ import (
 	"time"
 )
 
+//go:embed templates/*
+var templates embed.FS
+
+type userStory struct {
+	ID                 string   `json:"id"`
+	Title              string   `json:"title"`
+	Description        string   `json:"description"`
+	AcceptanceCriteria []string `json:"acceptanceCriteria"`
+	Priority           int      `json:"priority"`
+	Passes             bool     `json:"passes"`
+	Notes              string   `json:"notes"`
+}
+
 type prd struct {
-	Project     string `json:"project"`
-	BranchName  string `json:"branchName"`
-	Description string `json:"description"`
+	Project     string      `json:"project"`
+	BranchName  string      `json:"branchName"`
+	Description string      `json:"description"`
+	UserStories []userStory `json:"userStories"`
 }
 
 func loadPRD(scriptDir string) (*prd, error) {
 	prdPath := filepath.Join(scriptDir, "prd.json")
+	if _, err := os.Stat(prdPath); os.IsNotExist(err) {
+		if err := initMissingFiles(scriptDir); err != nil {
+			return nil, fmt.Errorf("initializing missing files: %w", err)
+		}
+	}
+
 	data, err := os.ReadFile(prdPath)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("prd.json not found in %s", scriptDir)
-		}
 		return nil, err
 	}
 
@@ -32,6 +50,38 @@ func loadPRD(scriptDir string) (*prd, error) {
 	}
 
 	return &p, nil
+}
+
+func initMissingFiles(scriptDir string) error {
+	// Files to initialize if missing
+	files := []struct {
+		name     string
+		template string
+	}{
+		{"prd.json", "templates/prd.json"},
+		{"CLAUDE.md", "templates/CLAUDE.md"},
+		{"prompt.md", "templates/prompt.md"},
+		{"AGENTS.md", "templates/AGENTS.md"},
+	}
+
+	for _, f := range files {
+		targetPath := filepath.Join(scriptDir, f.name)
+		if _, err := os.Stat(targetPath); err == nil {
+			continue // Already exists
+		}
+
+		logInfo("Initializing %s...", f.name)
+		content, err := templates.ReadFile(f.template)
+		if err != nil {
+			return fmt.Errorf("reading template for %s: %w", f.name, err)
+		}
+
+		if err := os.WriteFile(targetPath, content, 0644); err != nil {
+			return fmt.Errorf("writing %s: %w", f.name, err)
+		}
+	}
+
+	return nil
 }
 
 func initProgressFile(scriptDir string) error {
