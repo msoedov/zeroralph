@@ -7,6 +7,16 @@ Started: 2026-01-29
 - Global ~/.gitignore ignores prd.json, CLAUDE.md, progress.txt - use `git add -f` to force add them
 ---
 
+## 2026-01-29 - US-008
+- What was implemented: Unit tests for core functionality
+- Files changed: cmd/ralf/main_test.go, prd.json
+- **Learnings for future iterations:**
+  - Table-driven tests for parseArgs, loadPRD, containsCompletion
+  - t.TempDir() for isolated file system tests
+  - Tests cover: arg parsing, PRD loading, progress init, archive detection, completion detection
+  - Run tests with: go test ./...
+---
+
 ## 2026-01-29 - US-007
 - What was implemented: Completion detection and iteration loop
 - Files changed: prd.json (marked complete - implemented with US-006)
