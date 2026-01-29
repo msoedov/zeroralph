@@ -8,16 +8,28 @@ import (
 	"time"
 )
 
-// ANSI color codes
+// ANSI color codes - modern palette inspired by popular CLI tools
 const (
-	colorReset  = "\033[0m"
-	colorRed    = "\033[31m"
-	colorGreen  = "\033[32m"
-	colorYellow = "\033[33m"
-	colorBlue   = "\033[34m"
-	colorCyan   = "\033[36m"
-	colorGray   = "\033[90m"
-	colorBold   = "\033[1m"
+	colorReset = "\033[0m"
+	colorBold  = "\033[1m"
+	colorDim   = "\033[2m"
+
+	// Primary colors - softer, more readable
+	colorRed     = "\033[38;5;203m" // soft red
+	colorGreen   = "\033[38;5;114m" // muted green
+	colorYellow  = "\033[38;5;221m" // warm yellow
+	colorBlue    = "\033[38;5;75m"  // sky blue
+	colorCyan    = "\033[38;5;80m"  // teal
+	colorMagenta = "\033[38;5;177m" // soft purple
+	colorGray    = "\033[38;5;245m" // medium gray
+
+	// Semantic colors
+	colorSuccess = "\033[38;5;114m" // green
+	colorWarning = "\033[38;5;221m" // yellow
+	colorError   = "\033[38;5;203m" // red
+	colorInfo    = "\033[38;5;75m"  // blue
+	colorMuted   = "\033[38;5;245m" // gray
+	colorAccent  = "\033[38;5;80m"  // teal
 )
 
 // Spinner for activity indication
@@ -83,20 +95,21 @@ type statusLine struct {
 }
 
 func printStatusLine(line statusLine) {
-	checkmark := fmt.Sprintf("%s+%s", colorGreen, colorReset)
-	if !line.done {
-		checkmark = fmt.Sprintf("%s>%s", colorCyan, colorReset)
+	var marker string
+	if line.done {
+		marker = fmt.Sprintf("%s%s%s", colorSuccess, "done", colorReset)
+	} else {
+		marker = fmt.Sprintf("%s%s%s", colorAccent, "wait", colorReset)
 	}
 
 	elapsed := ""
 	if line.elapsed > 0 {
-		elapsed = fmt.Sprintf(" %s%s%s", colorGray, line.elapsed.Round(time.Second), colorReset)
+		elapsed = fmt.Sprintf(" %s%s%s", colorMuted, line.elapsed.Round(time.Second), colorReset)
 	}
 
-	fmt.Printf(" %s %s%-12s%s %s%s\n", checkmark, colorBold, line.id, colorReset, line.status, elapsed)
+	fmt.Printf("  %s%-6s%s %s%s%s%s\n", colorMuted, line.id, colorReset, marker, colorDim, elapsed, colorReset)
 }
 
-// Docker-like progress bar
 func progressBar(current, total int, width int) string {
 	if total == 0 {
 		return ""
@@ -106,18 +119,14 @@ func progressBar(current, total int, width int) string {
 		filled = width
 	}
 	empty := width - filled
-	bar := strings.Repeat("=", filled)
-	if filled < width {
-		bar += ">"
-		empty--
-	}
-	bar += strings.Repeat(" ", empty)
+	bar := colorAccent + strings.Repeat("━", filled) + colorReset
+	bar += colorMuted + strings.Repeat("─", empty) + colorReset
 	percent := (current * 100) / total
-	return fmt.Sprintf("[%s] %3d%%", bar, percent)
+	return fmt.Sprintf("%s %3d%%", bar, percent)
 }
 
-func printBanner(tool string, maxIter int, project, branch string) {
-	fmt.Printf("\n%s", colorCyan)
+func printBanner(tool string, maxIter int, project, branch, ver string) {
+	fmt.Printf("\n%s", colorAccent)
 	fmt.Println(` ________  ___  ___  ___       ________ `)
 	fmt.Println(`|\   __  \|\  \|\  \|\  \     |\  _____\`)
 	fmt.Println(`\ \  \|\  \ \  \\\  \ \  \    \ \  \__/ `)
@@ -126,30 +135,30 @@ func printBanner(tool string, maxIter int, project, branch string) {
 	fmt.Println(`   \ \__\\ _\\ \_______\ \_______\ \__\ `)
 	fmt.Println(`    \|__|\|__|\|_______|\|_______|\|__| `)
 	fmt.Printf("%s\n", colorReset)
-	fmt.Printf("  %sTool:%s      %s\n", colorGray, colorReset, tool)
-	fmt.Printf("  %sProject:%s   %s\n", colorGray, colorReset, project)
-	fmt.Printf("  %sBranch:%s    %s\n", colorGray, colorReset, branch)
-	fmt.Printf("  %sMax iter:%s  %d\n\n", colorGray, colorReset, maxIter)
+	fmt.Printf("  %sversion%s    %s\n", colorMuted, colorReset, ver)
+	fmt.Printf("  %stool%s       %s%s%s\n", colorMuted, colorReset, colorBold, tool, colorReset)
+	fmt.Printf("  %sproject%s    %s\n", colorMuted, colorReset, project)
+	fmt.Printf("  %sbranch%s     %s%s%s\n", colorMuted, colorReset, colorAccent, branch, colorReset)
+	fmt.Printf("  %smax iter%s   %d\n\n", colorMuted, colorReset, maxIter)
 }
 
-// Logging helpers with colors
 func logInfo(format string, args ...any) {
-	fmt.Printf("%s[*]%s %s\n", colorBlue, colorReset, fmt.Sprintf(format, args...))
+	fmt.Printf("  %sinfo%s  %s\n", colorInfo, colorReset, fmt.Sprintf(format, args...))
 }
 
 func logSuccess(format string, args ...any) {
-	fmt.Printf("%s[+]%s %s\n", colorGreen, colorReset, fmt.Sprintf(format, args...))
+	fmt.Printf("  %sdone%s  %s\n", colorSuccess, colorReset, fmt.Sprintf(format, args...))
 }
 
 func logWarning(format string, args ...any) {
-	fmt.Printf("%s[!]%s %s\n", colorYellow, colorReset, fmt.Sprintf(format, args...))
+	fmt.Printf("  %swarn%s  %s\n", colorWarning, colorReset, fmt.Sprintf(format, args...))
 }
 
 func logError(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, "%s[-]%s %s\n", colorRed, colorReset, fmt.Sprintf(format, args...))
+	fmt.Fprintf(os.Stderr, "  %sfail%s  %s\n", colorError, colorReset, fmt.Sprintf(format, args...))
 }
 
 func logStep(step, total int, format string, args ...any) {
 	msg := fmt.Sprintf(format, args...)
-	fmt.Printf("%s[%d/%d]%s %s\n", colorCyan, step, total, colorReset, msg)
+	fmt.Printf("  %s%d/%d%s  %s\n", colorAccent, step, total, colorReset, msg)
 }

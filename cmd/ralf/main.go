@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var version = "dev"
+var version = "0.1.0"
 
 func main() {
 	cfg, err := parseArgs(os.Args[1:])
@@ -45,44 +45,38 @@ func main() {
 		os.Exit(1)
 	}
 
-	printBanner(cfg.tool, cfg.maxIterations, p.Project, p.BranchName)
+	printBanner(cfg.tool, cfg.maxIterations, p.Project, p.BranchName, version)
 
-	// Docker-style build header
-	fmt.Printf("%s#1%s [internal] load configuration\n", colorGray, colorReset)
-	printStatusLine(statusLine{id: "prd.json", status: "loaded", done: true})
-	printStatusLine(statusLine{id: "CLAUDE.md", status: "loaded", done: true})
+	fmt.Printf("  %sloading%s  configuration\n", colorMuted, colorReset)
+	printStatusLine(statusLine{id: "prd", done: true})
+	printStatusLine(statusLine{id: "claude", done: true})
 	fmt.Println()
 
 	totalStart := time.Now()
 
 	for i := 1; i <= cfg.maxIterations; i++ {
-		// Docker build step style
-		fmt.Printf("%s#%d%s %s %s\n", colorGray, i+1, colorReset, progressBar(i-1, cfg.maxIterations, 20), fmt.Sprintf("iteration %d/%d", i, cfg.maxIterations))
+		fmt.Printf("  %s%d/%d%s    %s\n", colorAccent, i, cfg.maxIterations, colorReset, progressBar(i-1, cfg.maxIterations, 24))
 
 		startTime := time.Now()
 		output, err := runTool(cfg)
 		elapsed := time.Since(startTime)
 
 		if err != nil {
-			printStatusLine(statusLine{id: fmt.Sprintf("iter-%d", i), status: fmt.Sprintf("%swarning%s %v", colorYellow, colorReset, err), done: false, elapsed: elapsed})
+			printStatusLine(statusLine{id: fmt.Sprintf("iter%d", i), done: false, elapsed: elapsed})
 		} else {
-			printStatusLine(statusLine{id: fmt.Sprintf("iter-%d", i), status: "done", done: true, elapsed: elapsed})
+			printStatusLine(statusLine{id: fmt.Sprintf("iter%d", i), done: true, elapsed: elapsed})
 		}
 
 		if containsCompletion(output) {
 			fmt.Println()
-			fmt.Printf("%s#%d%s %s\n", colorGray, i+2, colorReset, "exporting results")
-			printStatusLine(statusLine{id: "complete", status: fmt.Sprintf("%sCOMPLETE%s", colorGreen, colorReset), done: true})
-			fmt.Println()
 			totalElapsed := time.Since(totalStart)
-			fmt.Printf(" %s=>%s %sfinished in %d iterations%s\n", colorGreen, colorReset, colorBold, i, colorReset)
-			fmt.Printf("    %stotal time: %s%s\n\n", colorGray, totalElapsed.Round(time.Second), colorReset)
+			fmt.Printf("  %scomplete%s  finished in %d iterations\n", colorSuccess, colorReset, i)
+			fmt.Printf("  %s          %s%s\n\n", colorMuted, totalElapsed.Round(time.Second), colorReset)
 			os.Exit(0)
 		}
 
 		if i < cfg.maxIterations {
-			// Docker-style waiting
-			spin := newSpinner(fmt.Sprintf("%swaiting%s next iteration...", colorGray, colorReset))
+			spin := newSpinner(fmt.Sprintf("%swaiting%s", colorMuted, colorReset))
 			spin.Start()
 			time.Sleep(2 * time.Second)
 			spin.Stop()
@@ -91,12 +85,9 @@ func main() {
 	}
 
 	fmt.Println()
-	fmt.Printf("%s#%d%s %s\n", colorGray, cfg.maxIterations+2, colorReset, "exporting results")
-	printStatusLine(statusLine{id: "incomplete", status: fmt.Sprintf("%smax iterations reached%s", colorYellow, colorReset), done: false})
-	fmt.Println()
 	totalElapsed := time.Since(totalStart)
-	fmt.Printf(" %s=>%s %smax iterations reached (%d)%s\n", colorYellow, colorReset, colorBold, cfg.maxIterations, colorReset)
-	fmt.Printf("    %stotal time: %s%s\n", colorGray, totalElapsed.Round(time.Second), colorReset)
-	fmt.Printf("    %scheck progress.txt for status%s\n\n", colorGray, colorReset)
+	fmt.Printf("  %stimeout%s   max iterations reached (%d)\n", colorWarning, colorReset, cfg.maxIterations)
+	fmt.Printf("  %s          %s%s\n", colorMuted, totalElapsed.Round(time.Second), colorReset)
+	fmt.Printf("  %s          check progress.txt%s\n\n", colorMuted, colorReset)
 	os.Exit(1)
 }
