@@ -8,12 +8,12 @@ This is a Go reimplementation of [snarktank/ralph](https://github.com/snarktank/
 
 ### From releases
 
-Download the binary for your platform from [releases](https://github.com/user/ralf/releases).
+Download the binary for your platform from [releases](https://github.com/msoedov/ralf/releases).
 
 ### From source
 
 ```bash
-go install github.com/user/ralf/cmd/ralf@latest
+go install github.com/msoedov/ralf/cmd/ralf@latest
 ```
 
 Or build locally:

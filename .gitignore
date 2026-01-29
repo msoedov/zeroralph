@@ -15,3 +15,4 @@
 # Local files
 .last-branch
 !cmd/ralf/templates/CLAUDE.md
+!cmd/ralf/templates/prd.json
