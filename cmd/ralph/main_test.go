@@ -24,13 +24,6 @@ func TestParseArgs(t *testing.T) {
 			wantMaxIter: 10,
 		},
 		{
-			name:        "init command",
-			args:        []string{"init"},
-			wantCmd:     "init",
-			wantTool:    "claude",
-			wantMaxIter: 10,
-		},
-		{
 			name:        "run command explicit",
 			args:        []string{"run", "5"},
 			wantCmd:     "run",
@@ -158,37 +151,6 @@ func TestLoadPRD(t *testing.T) {
 		}
 		if !exists {
 			t.Error("expected exists=true even for invalid json")
-		}
-	})
-}
-
-func TestInitPRD(t *testing.T) {
-	t.Run("creates prd.json", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		err := initPRD(tmpDir)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		prdPath := filepath.Join(tmpDir, "prd.json")
-		if _, err := os.Stat(prdPath); os.IsNotExist(err) {
-			t.Error("prd.json should exist")
-		}
-	})
-
-	t.Run("does not overwrite existing", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		prdPath := filepath.Join(tmpDir, "prd.json")
-		os.WriteFile(prdPath, []byte(`{"project":"existing"}`), 0644)
-
-		err := initPRD(tmpDir)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		data, _ := os.ReadFile(prdPath)
-		if string(data) != `{"project":"existing"}` {
-			t.Error("existing prd.json was overwritten")
 		}
 	})
 }
