@@ -7,6 +7,15 @@ Started: 2026-01-29
 - Global ~/.gitignore ignores prd.json, CLAUDE.md, progress.txt - use `git add -f` to force add them
 ---
 
+## 2026-01-29 - US-004
+- What was implemented: Progress file initialization with header
+- Files changed: prd.json (marked complete - implementation was already in place)
+- **Learnings for future iterations:**
+  - initProgressFile() creates file only if missing (uses os.Stat check)
+  - Header format: "# Ralph Progress Log\nStarted: <timestamp>\n---\n"
+  - Uses RFC1123 time format for timestamp
+---
+
 ## 2026-01-29 - US-003
 - What was implemented: PRD loading and validation with error handling
 - Files changed: prd.json (marked complete - implementation was already in place)
