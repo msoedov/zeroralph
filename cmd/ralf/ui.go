@@ -8,29 +8,40 @@ import (
 	"time"
 )
 
-// ANSI color codes - modern palette inspired by popular CLI tools
 const (
 	colorReset = "\033[0m"
 	colorBold  = "\033[1m"
 	colorDim   = "\033[2m"
 
-	// Primary colors - softer, more readable
-	colorRed     = "\033[38;5;203m" // soft red
-	colorGreen   = "\033[38;5;114m" // muted green
-	colorYellow  = "\033[38;5;221m" // warm yellow
-	colorBlue    = "\033[38;5;75m"  // sky blue
-	colorCyan    = "\033[38;5;80m"  // teal
-	colorMagenta = "\033[38;5;177m" // soft purple
-	colorGray    = "\033[38;5;245m" // medium gray
+	// Orcish colors - WarCraft 3 inspired
+	colorOrcBlood  = "\033[38;5;124m" // dark red
+	colorOrcIron   = "\033[38;5;244m" // metallic gray
+	colorOrcGold   = "\033[38;5;214m" // highlight gold
+	colorOrcRust   = "\033[38;5;130m" // brownish rust
+	colorOrcSparks = "\033[38;5;226m" // bright spark yellow
 
 	// Semantic colors
-	colorSuccess = "\033[38;5;114m" // green
-	colorWarning = "\033[38;5;221m" // yellow
-	colorError   = "\033[38;5;203m" // red
-	colorInfo    = "\033[38;5;75m"  // blue
-	colorMuted   = "\033[38;5;245m" // gray
-	colorAccent  = "\033[38;5;80m"  // teal
+	colorSuccess = colorOrcGold
+	colorWarning = colorOrcRust
+	colorError   = colorOrcBlood
+	colorInfo    = colorOrcIron
+	colorMuted   = "\033[38;5;240m"
+	colorAccent  = colorOrcBlood
 )
+
+// Forge animation (Hammer & Anvil)
+var forgeFrames = []string{
+	"  🔨      ",
+	"   🔨     ",
+	"    🔨    ",
+	"     🔨   ",
+	"      🔨  ",
+	"      ⛰  ",
+	"      🔨  ",
+	"     🔨   ",
+	"    🔨    ",
+	"   🔨     ",
+}
 
 // Spinner for activity indication
 type spinner struct {
@@ -44,7 +55,7 @@ type spinner struct {
 
 func newSpinner(message string) *spinner {
 	return &spinner{
-		frames:  []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
+		frames:  forgeFrames,
 		message: message,
 		stop:    make(chan struct{}),
 		done:    make(chan struct{}),
@@ -68,7 +79,7 @@ func (s *spinner) Start() {
 				msg := s.message
 				s.current = (s.current + 1) % len(s.frames)
 				s.mu.Unlock()
-				fmt.Printf("\r%s%s%s %s", colorCyan, frame, colorReset, msg)
+				fmt.Printf("\r%s%s%s %s", colorOrcIron, frame, colorReset, msg)
 			}
 		}
 	}()
@@ -97,9 +108,9 @@ type statusLine struct {
 func printStatusLine(line statusLine) {
 	var marker string
 	if line.done {
-		marker = fmt.Sprintf("%s%s%s", colorSuccess, "done", colorReset)
+		marker = fmt.Sprintf("%s%s%s", colorSuccess, "ready", colorReset)
 	} else {
-		marker = fmt.Sprintf("%s%s%s", colorAccent, "wait", colorReset)
+		marker = fmt.Sprintf("%s%s%s", colorOrcIron, "forging", colorReset)
 	}
 
 	elapsed := ""
@@ -107,7 +118,7 @@ func printStatusLine(line statusLine) {
 		elapsed = fmt.Sprintf(" %s%s%s", colorMuted, line.elapsed.Round(time.Second), colorReset)
 	}
 
-	fmt.Printf("  %s%-6s%s %s%s%s%s\n", colorMuted, line.id, colorReset, marker, colorDim, elapsed, colorReset)
+	fmt.Printf("  %s[%-6s]%s %s %s%s%s\n", colorOrcRust, line.id, colorReset, marker, colorDim, elapsed, colorReset)
 }
 
 func progressBar(current, total int, width int) string {
@@ -126,39 +137,41 @@ func progressBar(current, total int, width int) string {
 }
 
 func printBanner(tool string, maxIter int, project, branch, ver string) {
-	fmt.Printf("\n%s", colorAccent)
-	fmt.Println(` ________  ___  ___  ___       ________ `)
-	fmt.Println(`|\   __  \|\  \|\  \|\  \     |\  _____\`)
-	fmt.Println(`\ \  \|\  \ \  \\\  \ \  \    \ \  \__/ `)
-	fmt.Println(` \ \   _  _\ \  \\\  \ \  \    \ \   __\`)
-	fmt.Println(`  \ \  \\  \\ \  \\\  \ \  \____\ \  \_|`)
-	fmt.Println(`   \ \__\\ _\\ \_______\ \_______\ \__\ `)
-	fmt.Println(`    \|__|\|__|\|_______|\|_______|\|__| `)
+	fmt.Printf("\n%s", colorOrcIron)
+	fmt.Println(`             /\          /\          /\`)
+	fmt.Printf("      ______/  \\________/  \\________/  \\______\n")
+	fmt.Printf("     |  %s██████╗  █████╗ ██╗     ███████╗%s  |\n", colorOrcBlood, colorOrcIron)
+	fmt.Printf("     |  %s██╔══██╗██╔══██╗██║     ██╔════╝%s  |\n", colorOrcBlood, colorOrcIron)
+	fmt.Printf("     |  %s██████╔╝███████║██║     █████╗  %s  |\n", colorOrcBlood, colorOrcIron)
+	fmt.Printf("     |  %s██╔══██╗██╔══██╗██║     ██╔══╝  %s  |\n", colorOrcBlood, colorOrcIron)
+	fmt.Printf("     |  %s██║  ██║██║  ██║███████╗██║     %s  |\n", colorOrcBlood, colorOrcIron)
+	fmt.Printf("     |  %s╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝     %s  |\n", colorOrcBlood, colorOrcIron)
+	fmt.Printf("      \\______    ________    ________    ______/\n")
+	fmt.Println(`             \/          \/          \/`)
 	fmt.Printf("%s\n", colorReset)
-	fmt.Printf("  %sversion%s    %s\n", colorMuted, colorReset, ver)
-	fmt.Printf("  %stool%s       %s%s%s\n", colorMuted, colorReset, colorBold, tool, colorReset)
-	fmt.Printf("  %sproject%s    %s\n", colorMuted, colorReset, project)
-	fmt.Printf("  %sbranch%s     %s%s%s\n", colorMuted, colorReset, colorAccent, branch, colorReset)
-	fmt.Printf("  %smax iter%s   %d\n\n", colorMuted, colorReset, maxIter)
+	fmt.Printf("  %s[TOOL]%s %s%s%s\n", colorMuted, colorReset, colorBold, tool, colorReset)
+	fmt.Printf("  %s[PROJECT]%s  %s\n", colorMuted, colorReset, project)
+	fmt.Printf("  %s[BRANCH]%s     %s%s%s\n", colorMuted, colorReset, colorOrcGold, branch, colorReset)
+	fmt.Printf("  %s[LIMIT]%s    %d\n\n", colorMuted, colorReset, maxIter)
 }
 
 func logInfo(format string, args ...any) {
-	fmt.Printf("  %sinfo%s  %s\n", colorInfo, colorReset, fmt.Sprintf(format, args...))
+	fmt.Printf("  %s[ZUG ZUG]%s  %s\n", colorInfo, colorReset, fmt.Sprintf(format, args...))
 }
 
 func logSuccess(format string, args ...any) {
-	fmt.Printf("  %sdone%s  %s\n", colorSuccess, colorReset, fmt.Sprintf(format, args...))
+	fmt.Printf("  %s[DABU]%s     %s\n", colorSuccess, colorReset, fmt.Sprintf(format, args...))
 }
 
 func logWarning(format string, args ...any) {
-	fmt.Printf("  %swarn%s  %s\n", colorWarning, colorReset, fmt.Sprintf(format, args...))
+	fmt.Printf("  %s[SWAB]%s     %s\n", colorWarning, colorReset, fmt.Sprintf(format, args...))
 }
 
 func logError(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, "  %sfail%s  %s\n", colorError, colorReset, fmt.Sprintf(format, args...))
+	fmt.Fprintf(os.Stderr, "  %s[LOK-TAR!]%s %s\n", colorError, colorReset, fmt.Sprintf(format, args...))
 }
 
 func logStep(step, total int, format string, args ...any) {
 	msg := fmt.Sprintf(format, args...)
-	fmt.Printf("  %s%d/%d%s  %s\n", colorAccent, step, total, colorReset, msg)
+	fmt.Printf("  %s[%d/%d]%s  %s\n", colorAccent, step, total, colorReset, msg)
 }
