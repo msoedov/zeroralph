@@ -18,7 +18,7 @@ func TestParseArgs(t *testing.T) {
 		{
 			name:        "defaults",
 			args:        []string{},
-			wantTool:    "amp",
+			wantTool:    "claude",
 			wantMaxIter: 10,
 		},
 		{
@@ -42,7 +42,7 @@ func TestParseArgs(t *testing.T) {
 		{
 			name:        "max iterations",
 			args:        []string{"5"},
-			wantTool:    "amp",
+			wantTool:    "claude",
 			wantMaxIter: 5,
 		},
 		{

@@ -10,8 +10,74 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
+
+// ANSI color codes
+const (
+	colorReset  = "\033[0m"
+	colorRed    = "\033[31m"
+	colorGreen  = "\033[32m"
+	colorYellow = "\033[33m"
+	colorBlue   = "\033[34m"
+	colorCyan   = "\033[36m"
+	colorGray   = "\033[90m"
+	colorBold   = "\033[1m"
+)
+
+// Spinner for activity indication
+type spinner struct {
+	frames  []string
+	current int
+	message string
+	stop    chan struct{}
+	done    chan struct{}
+	mu      sync.Mutex
+}
+
+func newSpinner(message string) *spinner {
+	return &spinner{
+		frames:  []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
+		message: message,
+		stop:    make(chan struct{}),
+		done:    make(chan struct{}),
+	}
+}
+
+func (s *spinner) Start() {
+	go func() {
+		ticker := time.NewTicker(80 * time.Millisecond)
+		defer ticker.Stop()
+		defer close(s.done)
+
+		for {
+			select {
+			case <-s.stop:
+				fmt.Printf("\r\033[K")
+				return
+			case <-ticker.C:
+				s.mu.Lock()
+				frame := s.frames[s.current]
+				msg := s.message
+				s.current = (s.current + 1) % len(s.frames)
+				s.mu.Unlock()
+				fmt.Printf("\r%s%s%s %s", colorCyan, frame, colorReset, msg)
+			}
+		}
+	}()
+}
+
+func (s *spinner) Stop() {
+	close(s.stop)
+	<-s.done
+}
+
+func (s *spinner) UpdateMessage(msg string) {
+	s.mu.Lock()
+	s.message = msg
+	s.mu.Unlock()
+}
 
 var version = "dev"
 
@@ -29,7 +95,7 @@ type prd struct {
 
 func parseArgs(args []string) (*config, error) {
 	cfg := &config{
-		tool:          "amp",
+		tool:          "claude",
 		maxIterations: 10,
 	}
 
@@ -72,7 +138,7 @@ func printUsage() {
 Usage: ralf [--tool amp|claude] [max_iterations]
 
 Options:
-  --tool     AI tool to use: amp or claude (default: amp)
+  --tool     AI tool to use: amp or claude (default: claude)
   --version  Show version
   --help     Show this help
 
@@ -80,18 +146,14 @@ Arguments:
   max_iterations  Maximum iterations to run (default: 10)
 
 Examples:
-  ralf                    # Run with amp, 10 iterations
-  ralf 20                 # Run with amp, 20 iterations
-  ralf --tool claude      # Run with claude, 10 iterations
-  ralf --tool claude 15   # Run with claude, 15 iterations`)
+  ralf                    # Run with claude, 10 iterations
+  ralf 20                 # Run with claude, 20 iterations
+  ralf --tool amp         # Run with amp, 10 iterations
+  ralf --tool amp 15      # Run with amp, 15 iterations`)
 }
 
 func getScriptDir() (string, error) {
-	exe, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Dir(exe), nil
+	return os.Getwd()
 }
 
 func loadPRD(scriptDir string) (*prd, error) {
@@ -229,7 +291,7 @@ func archivePreviousRun(scriptDir string, p *prd) error {
 	folderName := strings.TrimPrefix(lastBranch, "ralph/")
 	archiveFolder := filepath.Join(scriptDir, "archive", time.Now().Format("2006-01-02")+"-"+folderName)
 
-	fmt.Printf("Archiving previous run: %s\n", lastBranch)
+	logInfo("Archiving previous run: %s", lastBranch)
 	if err := os.MkdirAll(archiveFolder, 0755); err != nil {
 		return err
 	}
@@ -243,70 +305,181 @@ func archivePreviousRun(scriptDir string, p *prd) error {
 		}
 	}
 
-	fmt.Printf("   Archived to: %s\n", archiveFolder)
+	logSuccess("Archived to: %s", archiveFolder)
 
 	return resetProgressFile(scriptDir)
+}
+
+// Logging helpers with colors
+func logInfo(format string, args ...any) {
+	fmt.Printf("%s[*]%s %s\n", colorBlue, colorReset, fmt.Sprintf(format, args...))
+}
+
+func logSuccess(format string, args ...any) {
+	fmt.Printf("%s[+]%s %s\n", colorGreen, colorReset, fmt.Sprintf(format, args...))
+}
+
+func logWarning(format string, args ...any) {
+	fmt.Printf("%s[!]%s %s\n", colorYellow, colorReset, fmt.Sprintf(format, args...))
+}
+
+func logError(format string, args ...any) {
+	fmt.Fprintf(os.Stderr, "%s[-]%s %s\n", colorRed, colorReset, fmt.Sprintf(format, args...))
+}
+
+func logStep(step, total int, format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	fmt.Printf("%s[%d/%d]%s %s\n", colorCyan, step, total, colorReset, msg)
+}
+
+// Docker-like progress bar
+func progressBar(current, total int, width int) string {
+	if total == 0 {
+		return ""
+	}
+	filled := (current * width) / total
+	if filled > width {
+		filled = width
+	}
+	empty := width - filled
+	bar := strings.Repeat("=", filled)
+	if filled < width {
+		bar += ">"
+		empty--
+	}
+	bar += strings.Repeat(" ", empty)
+	percent := (current * 100) / total
+	return fmt.Sprintf("[%s] %3d%%", bar, percent)
+}
+
+// Docker pull/build style status line
+type statusLine struct {
+	id      string
+	status  string
+	detail  string
+	done    bool
+	elapsed time.Duration
+}
+
+func printStatusLine(line statusLine) {
+	checkmark := fmt.Sprintf("%s+%s", colorGreen, colorReset)
+	if !line.done {
+		checkmark = fmt.Sprintf("%s>%s", colorCyan, colorReset)
+	}
+
+	elapsed := ""
+	if line.elapsed > 0 {
+		elapsed = fmt.Sprintf(" %s%s%s", colorGray, line.elapsed.Round(time.Second), colorReset)
+	}
+
+	fmt.Printf(" %s %s%-12s%s %s%s\n", checkmark, colorBold, line.id, colorReset, line.status, elapsed)
+}
+
+func printBanner(tool string, maxIter int, project, branch string) {
+	fmt.Printf("\n%s", colorCyan)
+	fmt.Println(` ________  ___  ___  ___       ________ `)
+	fmt.Println(`|\   __  \|\  \|\  \|\  \     |\  _____\`)
+	fmt.Println(`\ \  \|\  \ \  \\\  \ \  \    \ \  \__/ `)
+	fmt.Println(` \ \   _  _\ \  \\\  \ \  \    \ \   __\`)
+	fmt.Println(`  \ \  \\  \\ \  \\\  \ \  \____\ \  \_|`)
+	fmt.Println(`   \ \__\\ _\\ \_______\ \_______\ \__\ `)
+	fmt.Println(`    \|__|\|__|\|_______|\|_______|\|__| `)
+	fmt.Printf("%s\n", colorReset)
+	fmt.Printf("  %sTool:%s      %s\n", colorGray, colorReset, tool)
+	fmt.Printf("  %sProject:%s   %s\n", colorGray, colorReset, project)
+	fmt.Printf("  %sBranch:%s    %s\n", colorGray, colorReset, branch)
+	fmt.Printf("  %sMax iter:%s  %d\n\n", colorGray, colorReset, maxIter)
 }
 
 func main() {
 	cfg, err := parseArgs(os.Args[1:])
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		logError("%v", err)
 		os.Exit(1)
 	}
 
 	scriptDir, err := getScriptDir()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error getting script directory: %v\n", err)
+		logError("Getting script directory: %v", err)
 		os.Exit(1)
 	}
 	cfg.scriptDir = scriptDir
 
 	p, err := loadPRD(scriptDir)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		logError("%v", err)
 		os.Exit(1)
 	}
 
 	if err := archivePreviousRun(scriptDir, p); err != nil {
-		fmt.Fprintf(os.Stderr, "Error archiving previous run: %v\n", err)
+		logError("Archiving previous run: %v", err)
 		os.Exit(1)
 	}
 
 	if p.BranchName != "" {
 		if err := writeLastBranch(scriptDir, p.BranchName); err != nil {
-			fmt.Fprintf(os.Stderr, "Error saving branch: %v\n", err)
+			logError("Saving branch: %v", err)
 			os.Exit(1)
 		}
 	}
 
 	if err := initProgressFile(scriptDir); err != nil {
-		fmt.Fprintf(os.Stderr, "Error initializing progress file: %v\n", err)
+		logError("Initializing progress file: %v", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("Starting Ralf - Tool: %s - Max iterations: %d\n", cfg.tool, cfg.maxIterations)
-	fmt.Printf("Project: %s - Branch: %s\n", p.Project, p.BranchName)
+	printBanner(cfg.tool, cfg.maxIterations, p.Project, p.BranchName)
+
+	// Docker-style build header
+	fmt.Printf("%s#1%s [internal] load configuration\n", colorGray, colorReset)
+	printStatusLine(statusLine{id: "prd.json", status: "loaded", done: true})
+	printStatusLine(statusLine{id: "CLAUDE.md", status: "loaded", done: true})
+	fmt.Println()
+
+	totalStart := time.Now()
 
 	for i := 1; i <= cfg.maxIterations; i++ {
-		fmt.Printf("\n=== Iteration %d/%d ===\n", i, cfg.maxIterations)
+		// Docker build step style
+		fmt.Printf("%s#%d%s %s %s\n", colorGray, i+1, colorReset, progressBar(i-1, cfg.maxIterations, 20), fmt.Sprintf("iteration %d/%d", i, cfg.maxIterations))
 
+		startTime := time.Now()
 		output, err := runTool(cfg)
+		elapsed := time.Since(startTime)
+
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+			printStatusLine(statusLine{id: fmt.Sprintf("iter-%d", i), status: fmt.Sprintf("%swarning%s %v", colorYellow, colorReset, err), done: false, elapsed: elapsed})
+		} else {
+			printStatusLine(statusLine{id: fmt.Sprintf("iter-%d", i), status: "done", done: true, elapsed: elapsed})
 		}
 
 		if containsCompletion(output) {
-			fmt.Printf("\n=== COMPLETE - All tasks finished ===\n")
+			fmt.Println()
+			fmt.Printf("%s#%d%s %s\n", colorGray, i+2, colorReset, "exporting results")
+			printStatusLine(statusLine{id: "complete", status: fmt.Sprintf("%sCOMPLETE%s", colorGreen, colorReset), done: true})
+			fmt.Println()
+			totalElapsed := time.Since(totalStart)
+			fmt.Printf(" %s=>%s %sfinished in %d iterations%s\n", colorGreen, colorReset, colorBold, i, colorReset)
+			fmt.Printf("    %stotal time: %s%s\n\n", colorGray, totalElapsed.Round(time.Second), colorReset)
 			os.Exit(0)
 		}
 
 		if i < cfg.maxIterations {
-			fmt.Printf("\n--- Waiting 2 seconds before next iteration ---\n")
+			// Docker-style waiting
+			spin := newSpinner(fmt.Sprintf("%swaiting%s next iteration...", colorGray, colorReset))
+			spin.Start()
 			time.Sleep(2 * time.Second)
+			spin.Stop()
+			fmt.Println()
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "\n=== Max iterations reached without completion ===\n")
+	fmt.Println()
+	fmt.Printf("%s#%d%s %s\n", colorGray, cfg.maxIterations+2, colorReset, "exporting results")
+	printStatusLine(statusLine{id: "incomplete", status: fmt.Sprintf("%smax iterations reached%s", colorYellow, colorReset), done: false})
+	fmt.Println()
+	totalElapsed := time.Since(totalStart)
+	fmt.Printf(" %s=>%s %smax iterations reached (%d)%s\n", colorYellow, colorReset, colorBold, cfg.maxIterations, colorReset)
+	fmt.Printf("    %stotal time: %s%s\n", colorGray, totalElapsed.Round(time.Second), colorReset)
+	fmt.Printf("    %scheck progress.txt for status%s\n\n", colorGray, colorReset)
 	os.Exit(1)
 }
