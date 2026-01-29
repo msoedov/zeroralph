@@ -7,6 +7,15 @@ Started: 2026-01-29
 - Global ~/.gitignore ignores prd.json, CLAUDE.md, progress.txt - use `git add -f` to force add them
 ---
 
+## 2026-01-29 - US-002
+- What was implemented: CLI argument parsing with --tool, --help, --version, and positional max_iterations
+- Files changed: prd.json (marked complete - implementation was already in place from US-001)
+- **Learnings for future iterations:**
+  - parseArgs() handles --tool flag with validation (amp|claude)
+  - Positional numeric args are parsed as max_iterations
+  - printUsage() provides comprehensive help text
+---
+
 ## 2026-01-29 - US-001
 - What was implemented: Go project structure with CLI entry point
 - Files changed: go.mod, cmd/ralf/main.go, .gitignore, CLAUDE.md, prd.json, progress.txt
