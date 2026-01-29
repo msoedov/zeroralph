@@ -58,7 +58,10 @@ func main() {
 		fmt.Printf("  %s%d/%d%s    %s\n", colorAccent, i, cfg.maxIterations, colorReset, progressBar(i-1, cfg.maxIterations, 24))
 
 		startTime := time.Now()
+		spin := newSpinner(fmt.Sprintf("%srunning %s%s", colorMuted, cfg.tool, colorReset))
+		spin.Start()
 		output, err := runTool(cfg)
+		spin.Stop()
 		elapsed := time.Since(startTime)
 
 		if err != nil {
