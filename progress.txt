@@ -7,6 +7,16 @@ Started: 2026-01-29
 - Global ~/.gitignore ignores prd.json, CLAUDE.md, progress.txt - use `git add -f` to force add them
 ---
 
+## 2026-01-29 - US-005
+- What was implemented: Archive previous run when branch changes
+- Files changed: prd.json (marked complete - implementation was already in place)
+- **Learnings for future iterations:**
+  - archivePreviousRun() compares .last-branch with prd.BranchName
+  - Archive folder format: archive/YYYY-MM-DD-<branch-name>/
+  - Strips "ralph/" prefix from branch name for folder name
+  - Copies prd.json and progress.txt, then resets progress.txt
+---
+
 ## 2026-01-29 - US-004
 - What was implemented: Progress file initialization with header
 - Files changed: prd.json (marked complete - implementation was already in place)
