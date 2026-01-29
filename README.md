@@ -80,3 +80,28 @@ ralf expects these files in the current directory:
 - `progress.txt` - Progress log updated by the AI
 - `archive/` - Previous runs archived by date and branch
 - `.last-branch` - Tracks the last used branch
+
+## Compatibility
+
+ralf is a Go reimplementation of `scripts/ralph/ralph.sh`. It provides full feature parity plus enhancements:
+
+| Feature | ralph.sh | ralf |
+|---------|----------|------|
+| Tool selection (`--tool amp\|claude`) | Yes | Yes |
+| Max iterations argument | Yes | Yes |
+| PRD loading (`prd.json`) | Yes | Yes |
+| Branch-based archiving | Yes | Yes |
+| Progress file initialization | Yes | Yes |
+| Completion detection (`<promise>COMPLETE</promise>`) | Yes | Yes |
+| 2-second sleep between iterations | Yes | Yes |
+| Output tee to stderr | Yes | Yes |
+| Exit codes (0 success, 1 max reached) | Yes | Yes |
+| `--version` flag | No | Yes |
+| `--help` flag | No | Yes |
+| ASCII banner | No | Yes |
+| Docker-style progress bar | No | Yes |
+| Spinner animation | No | Yes |
+| Colored output | No | Yes |
+| Elapsed time tracking | No | Yes |
+
+Default tool changed from `amp` to `claude`.
