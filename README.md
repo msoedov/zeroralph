@@ -33,6 +33,7 @@ ralph [command] [--tool amp|claude] [max_iterations]
 - `run` - Start the AI agent loop (default)
 - `init` - Create prd.json in current directory
 - `prompt` - Print the embedded prompt for a tool (claude or amp)
+- `skill` - Print a skill instruction (prd or ralph)
 
 ### Options
 
@@ -51,6 +52,8 @@ ralph                    # Run with claude, 10 iterations
 ralph init               # Create prd.json in current directory
 ralph prompt claude      # Print the Claude prompt to stdout
 ralph prompt amp         # Print the Amp prompt to stdout
+ralph skill prd          # Print the PRD generator skill
+ralph skill ralph        # Print the Ralph converter skill
 ralph 20                 # Run with claude, 20 iterations
 ralph --tool amp         # Run with amp, 10 iterations
 ```
@@ -96,9 +99,13 @@ All files are stored in the **current working directory** (where you run ralph):
 5. Checks output for `<promise>COMPLETE</promise>` marker
 6. Exits on completion or max iterations
 
-## Embedded Prompts
+## Embedded Prompts and Skills
 
-The prompts for Claude and Amp are embedded in the binary - no external files needed. Use `ralph prompt claude` or `ralph prompt amp` to inspect them.
+All prompts and skills are embedded in the binary - no external files needed.
+
+### Prompts
+
+Use `ralph prompt claude` or `ralph prompt amp` to inspect the prompts passed to AI tools.
 
 The prompts instruct the AI to:
 - Read prd.json and progress.txt from the current directory
@@ -107,6 +114,21 @@ The prompts instruct the AI to:
 - Update prd.json to mark the story as complete
 - Append progress to progress.txt
 - Output `<promise>COMPLETE</promise>` when all stories pass
+
+### Skills
+
+Skills are instruction sets you can pipe to AI tools for specific tasks:
+
+| Skill | Description |
+|-------|-------------|
+| `prd` | Generate PRDs from feature descriptions |
+| `ralph` | Convert existing PRDs to prd.json format |
+
+Example usage with Claude:
+```bash
+ralph skill prd | claude
+ralph skill ralph | claude
+```
 
 ## Compatibility with original ralph
 
@@ -120,6 +142,7 @@ The prompts instruct the AI to:
 | Completion detection | Yes | Yes |
 | `init` command | No | Yes |
 | `prompt` command | No | Yes |
+| `skill` command | No | Yes |
 | Self-contained binary | No | Yes |
 | ASCII banner & UI | No | Yes |
 | Progress bar & Spinner | No | Yes |
@@ -145,6 +168,8 @@ cmd/ralph/
   tool.go           # Tool execution
   tool_claude.go    # Claude prompt (embedded)
   tool_amp.go       # Amp prompt (embedded)
+  skill_prd.go      # PRD generator skill (embedded)
+  skill_ralph.go    # Ralph converter skill (embedded)
   ui.go             # Terminal UI
   version.go        # Version
 ```

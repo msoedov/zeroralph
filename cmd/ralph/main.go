@@ -36,6 +36,12 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Handle 'skill' command
+	if cfg.command == "skill" {
+		fmt.Println(getSkill(cfg.tool))
+		os.Exit(0)
+	}
+
 	// Run command - load PRD
 	logInfo("Working directory: %s", workDir)
 

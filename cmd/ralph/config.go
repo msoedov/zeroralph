@@ -32,6 +32,9 @@ func parseArgs(args []string) (*config, error) {
 		case "prompt":
 			cfg.command = "prompt"
 			i = 1
+		case "skill":
+			cfg.command = "skill"
+			i = 1
 		}
 	}
 
@@ -56,6 +59,9 @@ func parseArgs(args []string) (*config, error) {
 			if cfg.command == "prompt" && cfg.tool == "claude" {
 				// For prompt command, first positional argument is tool name
 				cfg.tool = arg
+			} else if cfg.command == "skill" && cfg.tool == "claude" {
+				// For skill command, first positional argument is skill name
+				cfg.tool = arg
 			} else if n, err := strconv.Atoi(arg); err == nil && n > 0 {
 				cfg.maxIterations = n
 			}
@@ -63,7 +69,7 @@ func parseArgs(args []string) (*config, error) {
 		i++
 	}
 
-	if cfg.command != "prompt" && cfg.tool != "amp" && cfg.tool != "claude" {
+	if cfg.command != "prompt" && cfg.command != "skill" && cfg.tool != "amp" && cfg.tool != "claude" {
 		return nil, fmt.Errorf("invalid tool '%s': must be 'amp' or 'claude'", cfg.tool)
 	}
 
@@ -79,6 +85,7 @@ Commands:
   run       Start the AI agent loop (default)
   init      Initialize prd.json in current directory
   prompt    Print the prompt for a tool (claude or amp)
+  skill     Print a skill instruction (prd or ralph)
 
 Options:
   --tool     AI tool to use: amp or claude (default: claude)
@@ -93,6 +100,8 @@ Examples:
   ralph init               # Create prd.json in current directory
   ralph prompt claude      # Print the Claude prompt
   ralph prompt amp         # Print the Amp prompt
+  ralph skill prd          # Print the PRD generator skill
+  ralph skill ralph        # Print the Ralph converter skill
   ralph 20                 # Run with claude, 20 iterations
   ralph --tool amp         # Run with amp, 10 iterations
 
@@ -101,8 +110,11 @@ File Locations:
   progress.txt  Current working directory (created automatically)
   archive/      Current working directory (for archiving old runs)
 
-The prompts for Claude and Amp are embedded in the binary. Use 'ralph prompt'
-to inspect them.`)
+Skills:
+  prd     Generate PRDs from feature descriptions
+  ralph   Convert PRDs to prd.json format
+
+The prompts and skills are embedded in the binary.`)
 }
 
 func getWorkDir() (string, error) {

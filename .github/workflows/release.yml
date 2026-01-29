@@ -40,13 +40,13 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
         run: |
           VERSION=${GITHUB_REF_NAME}
-          go build -ldflags="-s -w -X main.version=${VERSION}" -o ralf-${{ matrix.suffix }} ./cmd/ralf/
+          go build -ldflags="-s -w -X main.version=${VERSION}" -o ralph-${{ matrix.suffix }} ./cmd/ralph/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ralf-${{ matrix.suffix }}
-          path: ralf-${{ matrix.suffix }}
+          name: ralph-${{ matrix.suffix }}
+          path: ralph-${{ matrix.suffix }}
 
   release:
     needs: build

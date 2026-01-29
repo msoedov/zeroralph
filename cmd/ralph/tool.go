@@ -11,12 +11,27 @@ import (
 // Prompts are defined in:
 //   - tool_claude.go (claudePrompt)
 //   - tool_amp.go (ampPrompt)
+//
+// Skills are defined in:
+//   - skill_prd.go (skillPRD)
+//   - skill_ralph.go (skillRalph)
 
 func getPrompt(tool string) string {
 	if tool == "amp" {
 		return ampPrompt
 	}
 	return claudePrompt
+}
+
+func getSkill(name string) string {
+	switch name {
+	case "prd":
+		return skillPRD
+	case "ralph":
+		return skillRalph
+	default:
+		return "Unknown skill: " + name + "\nAvailable skills: prd, ralph"
+	}
 }
 
 func runTool(cfg *config) (string, error) {
