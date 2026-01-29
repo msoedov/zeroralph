@@ -1,3 +1,17 @@
 # Ralph Progress Log
 Started: 2026-01-29
 ---
+
+## Codebase Patterns
+- Use `/ralf` in .gitignore (not `ralf`) to avoid ignoring cmd/ralf/ directory
+- Global ~/.gitignore ignores prd.json, CLAUDE.md, progress.txt - use `git add -f` to force add them
+---
+
+## 2026-01-29 - US-001
+- What was implemented: Go project structure with CLI entry point
+- Files changed: go.mod, cmd/ralf/main.go, .gitignore, CLAUDE.md, prd.json, progress.txt
+- **Learnings for future iterations:**
+  - Project already had substantial implementation in main.go (arg parsing, PRD loading, progress file init, archiving)
+  - Build with: `go build -o ralf ./cmd/ralf/`
+  - Test with: `./ralf --version` and `./ralf --help`
+---
