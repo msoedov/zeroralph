@@ -7,6 +7,16 @@ Started: 2026-01-29
 - Global ~/.gitignore ignores prd.json, CLAUDE.md, progress.txt - use `git add -f` to force add them
 ---
 
+## 2026-01-29 - US-007
+- What was implemented: Completion detection and iteration loop
+- Files changed: prd.json (marked complete - implemented with US-006)
+- **Learnings for future iterations:**
+  - containsCompletion() checks for <promise>COMPLETE</promise> marker
+  - Main loop prints "=== Iteration X/Y ===" for each iteration
+  - Exit 0 on completion, exit 1 on max iterations
+  - 2-second delay between iterations using time.Sleep
+---
+
 ## 2026-01-29 - US-006
 - What was implemented: AI tool execution with runTool() function
 - Files changed: cmd/ralf/main.go, prd.json

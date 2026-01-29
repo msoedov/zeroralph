@@ -104,7 +104,7 @@
         "go build succeeds"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
