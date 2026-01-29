@@ -7,6 +7,15 @@ Started: 2026-01-29
 - Global ~/.gitignore ignores prd.json, CLAUDE.md, progress.txt - use `git add -f` to force add them
 ---
 
+## 2026-01-29 - US-003
+- What was implemented: PRD loading and validation with error handling
+- Files changed: prd.json (marked complete - implementation was already in place)
+- **Learnings for future iterations:**
+  - loadPRD() loads from script directory (executable location, not cwd)
+  - getScriptDir() uses os.Executable() to find binary location
+  - Graceful error handling for missing file and invalid JSON
+---
+
 ## 2026-01-29 - US-002
 - What was implemented: CLI argument parsing with --tool, --help, --version, and positional max_iterations
 - Files changed: prd.json (marked complete - implementation was already in place from US-001)
