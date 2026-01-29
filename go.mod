@@ -1,3 +1,3 @@
-module github.com/user/ralf
+module github.com/msoedov/ralph
 
 go 1.22

@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-
 func main() {
 	cfg, err := parseArgs(os.Args[1:])
 	if err != nil {
@@ -14,69 +13,71 @@ func main() {
 		os.Exit(1)
 	}
 
-	scriptDir, err := getScriptDir()
+	workDir, err := getWorkDir()
 	if err != nil {
-		logError("Getting script directory: %v", err)
+		logError("Getting working directory: %v", err)
 		os.Exit(1)
 	}
-	cfg.scriptDir = scriptDir
+	cfg.workDir = workDir
 
+	// Handle 'init' command
 	if cfg.command == "init" {
-		if err := initMissingFiles(scriptDir); err != nil {
-			logError("Initialization: %v", err)
+		logInfo("Initializing ralph in %s", workDir)
+		if err := initPRD(workDir); err != nil {
+			logError("%v", err)
 			os.Exit(1)
 		}
-		logSuccess("Workspace initialized successfully.")
 		os.Exit(0)
 	}
 
-	if cfg.command == "skills" {
-		skillName := cfg.tool
-		skillPath := fmt.Sprintf("templates/skills/%s/SKILL.md", skillName)
-		content, err := templates.ReadFile(skillPath)
-		if err != nil {
-			logError("Skill %q not found or error loading it", skillName)
-			fmt.Println("\nAvailable skills: prd, ralph")
-			os.Exit(1)
-		}
-		fmt.Println(string(content))
+	// Handle 'prompt' command
+	if cfg.command == "prompt" {
+		fmt.Println(getPrompt(cfg.tool))
 		os.Exit(0)
 	}
 
-	p, err := loadPRD(scriptDir)
+	// Run command - load PRD
+	logInfo("Working directory: %s", workDir)
+
+	p, exists, err := loadPRD(workDir)
 	if err != nil {
 		logError("%v", err)
 		os.Exit(1)
 	}
 
-	if err := archivePreviousRun(scriptDir, p); err != nil {
-		logError("Archiving previous run: %v", err)
-		os.Exit(1)
+	if !exists {
+		logWarning("No prd.json found in %s", workDir)
+		logInfo("Run 'ralph init' to create one, or create prd.json manually")
+		logInfo("Continuing without PRD...")
+		p = &prd{Project: "unknown", BranchName: "", Description: "No PRD"}
+	} else {
+		logSuccess("Loaded prd.json: project=%s branch=%s", p.Project, p.BranchName)
 	}
 
 	if p.BranchName != "" {
-		if err := writeLastBranch(scriptDir, p.BranchName); err != nil {
+		if err := archivePreviousRun(workDir, p); err != nil {
+			logError("Archiving previous run: %v", err)
+			os.Exit(1)
+		}
+
+		if err := writeLastBranch(workDir, p.BranchName); err != nil {
 			logError("Saving branch: %v", err)
 			os.Exit(1)
 		}
 	}
 
-	if err := initProgressFile(scriptDir); err != nil {
+	if err := initProgressFile(workDir); err != nil {
 		logError("Initializing progress file: %v", err)
 		os.Exit(1)
 	}
 
 	printBanner(cfg.tool, cfg.maxIterations, p, version)
-
-	fmt.Printf("  %sforging%s  workspace\n", colorMuted, colorReset)
-	printStatusLine(statusLine{id: "prd", done: true})
-	printStatusLine(statusLine{id: "claude", done: true})
 	fmt.Println()
 
 	totalStart := time.Now()
 
 	for i := 1; i <= cfg.maxIterations; i++ {
-		fmt.Printf("  %s%d/%d%s    %s\n", colorAccent, i, cfg.maxIterations, colorReset, progressBar(i-1, cfg.maxIterations, 24))
+		fmt.Printf("\n  %s%d/%d%s    %s\n", colorAccent, i, cfg.maxIterations, colorReset, progressBar(i-1, cfg.maxIterations, 24))
 
 		startTime := time.Now()
 		spin := newSpinner(fmt.Sprintf("%srunning %s%s", colorMuted, cfg.tool, colorReset))
@@ -85,6 +86,8 @@ func main() {
 		spin.Stop()
 		elapsed := time.Since(startTime)
 
+		// Print status on new line after spinner clears
+		fmt.Println()
 		if err != nil {
 			printStatusLine(statusLine{id: fmt.Sprintf("iter%d", i), done: false, elapsed: elapsed})
 		} else {

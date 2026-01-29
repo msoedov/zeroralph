@@ -73,17 +73,17 @@ func TestParseArgs(t *testing.T) {
 			wantMaxIter: 20,
 		},
 		{
-			name:        "skills command prd",
-			args:        []string{"skills", "prd"},
-			wantCmd:     "skills",
-			wantTool:    "prd",
+			name:        "prompt command claude",
+			args:        []string{"prompt", "claude"},
+			wantCmd:     "prompt",
+			wantTool:    "claude",
 			wantMaxIter: 10,
 		},
 		{
-			name:        "skills command ralph",
-			args:        []string{"skills", "ralph"},
-			wantCmd:     "skills",
-			wantTool:    "ralph",
+			name:        "prompt command amp",
+			args:        []string{"prompt", "amp"},
+			wantCmd:     "prompt",
+			wantTool:    "amp",
 			wantMaxIter: 10,
 		},
 	}
@@ -115,15 +115,17 @@ func TestParseArgs(t *testing.T) {
 }
 
 func TestLoadPRD(t *testing.T) {
-	tmpDir := t.TempDir()
-
 	t.Run("valid prd", func(t *testing.T) {
+		tmpDir := t.TempDir()
 		prdPath := filepath.Join(tmpDir, "prd.json")
 		os.WriteFile(prdPath, []byte(`{"project":"test","branchName":"main"}`), 0644)
 
-		p, err := loadPRD(tmpDir)
+		p, exists, err := loadPRD(tmpDir)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
+		}
+		if !exists {
+			t.Error("expected exists=true")
 		}
 		if p.Project != "test" {
 			t.Errorf("project = %q, want %q", p.Project, "test")
@@ -133,31 +135,82 @@ func TestLoadPRD(t *testing.T) {
 		}
 	})
 
-	t.Run("missing prd initializes files", func(t *testing.T) {
+	t.Run("missing prd returns nil", func(t *testing.T) {
 		emptyDir := t.TempDir()
-		p, err := loadPRD(emptyDir)
+		p, exists, err := loadPRD(emptyDir)
 		if err != nil {
-			t.Errorf("expected auto-initialization, got error: %v", err)
+			t.Errorf("unexpected error: %v", err)
 		}
-		if p.Project == "" {
-			t.Error("expected initialized PRD project name to be non-empty")
+		if exists {
+			t.Error("expected exists=false for missing prd.json")
 		}
-
-		// Verify files exist
-		files := []string{"prd.json", "CLAUDE.md", "prompt.md", "AGENTS.md"}
-		for _, f := range files {
-			if _, err := os.Stat(filepath.Join(emptyDir, f)); os.IsNotExist(err) {
-				t.Errorf("expected %s to be initialized", f)
-			}
+		if p != nil {
+			t.Error("expected nil prd for missing file")
 		}
 	})
 
 	t.Run("invalid json", func(t *testing.T) {
 		invalidDir := t.TempDir()
 		os.WriteFile(filepath.Join(invalidDir, "prd.json"), []byte(`{invalid`), 0644)
-		_, err := loadPRD(invalidDir)
+		_, exists, err := loadPRD(invalidDir)
 		if err == nil {
 			t.Error("expected error for invalid json")
+		}
+		if !exists {
+			t.Error("expected exists=true even for invalid json")
+		}
+	})
+}
+
+func TestInitPRD(t *testing.T) {
+	t.Run("creates prd.json", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		err := initPRD(tmpDir)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		prdPath := filepath.Join(tmpDir, "prd.json")
+		if _, err := os.Stat(prdPath); os.IsNotExist(err) {
+			t.Error("prd.json should exist")
+		}
+	})
+
+	t.Run("does not overwrite existing", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		prdPath := filepath.Join(tmpDir, "prd.json")
+		os.WriteFile(prdPath, []byte(`{"project":"existing"}`), 0644)
+
+		err := initPRD(tmpDir)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		data, _ := os.ReadFile(prdPath)
+		if string(data) != `{"project":"existing"}` {
+			t.Error("existing prd.json was overwritten")
+		}
+	})
+}
+
+func TestGetPrompt(t *testing.T) {
+	t.Run("claude prompt", func(t *testing.T) {
+		p := getPrompt("claude")
+		if p == "" {
+			t.Error("claude prompt should not be empty")
+		}
+		if len(p) < 100 {
+			t.Error("claude prompt seems too short")
+		}
+	})
+
+	t.Run("amp prompt", func(t *testing.T) {
+		p := getPrompt("amp")
+		if p == "" {
+			t.Error("amp prompt should not be empty")
+		}
+		if len(p) < 100 {
+			t.Error("amp prompt seems too short")
 		}
 	})
 }

@@ -1,41 +1,38 @@
-# ralf
-
-
+# ralph
 
 Autonomous AI agent loop. Runs Claude or Amp in iterations until task completion.
 
-This is a Go reimplementation of [snarktank/ralph](https://github.com/snarktank/ralph), rewritten in Go for simplicity of setup and portability.
-
-![ralf demo](docs/demo.png)
+This is a Go reimplementation of [snarktank/ralph](https://github.com/snarktank/ralph), rewritten for simplicity of setup - single binary, no external dependencies or template files.
 
 ## Installation
 
 ### From releases
 
-Download the binary for your platform from [releases](https://github.com/msoedov/ralf/releases).
+Download the binary for your platform from [releases](https://github.com/msoedov/ralph/releases).
 
 ### From source
 
 ```bash
-go install github.com/msoedov/ralf/cmd/ralf@latest
+go install github.com/msoedov/ralph/cmd/ralph@latest
 ```
 
 Or build locally:
 
 ```bash
-go build -o ralf ./cmd/ralf/
+go build -o ralph ./cmd/ralph/
 ```
 
 ## Usage
 
 ```bash
-ralf [command] [--tool amp|claude] [max_iterations]
+ralph [command] [--tool amp|claude] [max_iterations]
 ```
 
 ### Commands
 
 - `run` - Start the AI agent loop (default)
-- `init` - Initialize workspace with templates (`prd.json`, `CLAUDE.md`, etc.)
+- `init` - Create prd.json in current directory
+- `prompt` - Print the embedded prompt for a tool (claude or amp)
 
 ### Options
 
@@ -50,33 +47,31 @@ ralf [command] [--tool amp|claude] [max_iterations]
 ### Examples
 
 ```bash
-ralf                    # Run with claude, 10 iterations
-ralf init               # Initialize workspace with templates
-ralf 20                 # Run with claude, 20 iterations
-ralf --tool amp         # Run with amp, 10 iterations
+ralph                    # Run with claude, 10 iterations
+ralph init               # Create prd.json in current directory
+ralph prompt claude      # Print the Claude prompt to stdout
+ralph prompt amp         # Print the Amp prompt to stdout
+ralph 20                 # Run with claude, 20 iterations
+ralph --tool amp         # Run with amp, 10 iterations
 ```
 
-## Configuration
+## File Locations
 
-`ralf` is completely self-contained. It can initialize a new workspace using its embedded templates.
+All files are stored in the **current working directory** (where you run ralph):
 
-By default, `ralf` stores its configuration and progress tracking files in a hidden directory: `.claude/ralf/`. This keeps your project root clean.
+| File | Description |
+|------|-------------|
+| `prd.json` | Project configuration (created by `ralph init`) |
+| `progress.txt` | Progress log (created automatically on first run) |
+| `archive/` | Previous runs archived when branch changes |
+| `.ralph-branch` | Tracks the last used branch |
 
-- `.claude/ralf/prd.json` - Project configuration with fields:
-  - `project` - Project name
-  - `branchName` - Git branch name
-  - `description` - Feature description
-  - `userStories` - List of tasks for the agent
-- `.claude/ralf/CLAUDE.md` - Instructions for Claude (when using `--tool claude`)
-- `.claude/ralf/prompt.md` - Instructions for Amp (when using `--tool amp`)
-- `.claude/ralf/AGENTS.md` - General guidelines for the agents
-
-### prd.json example
+### prd.json format
 
 ```json
 {
   "project": "my-project",
-  "branchName": "feature/new-feature",
+  "branchName": "ralph/feature-name",
   "description": "Implement the new feature",
   "userStories": [
     {
@@ -94,30 +89,62 @@ By default, `ralf` stores its configuration and progress tracking files in a hid
 
 ## How it works
 
-1. Loads `prd.json` from current directory (auto-initializes if missing or via `ralf init`)
-2. Archives previous run if branch changed
-3. Initializes `progress.txt` for tracking
-4. Runs the AI tool in a loop
+1. Reads `prd.json` from current directory (warns if missing)
+2. Archives previous run if branch changed (copies prd.json + progress.txt to archive/)
+3. Creates/updates `progress.txt` for tracking
+4. Runs the AI tool in a loop, piping the embedded prompt to stdin
 5. Checks output for `<promise>COMPLETE</promise>` marker
 6. Exits on completion or max iterations
 
-## Compatibility
+## Embedded Prompts
 
-`ralf` provides full feature parity with the original scripts plus significant enhancements:
+The prompts for Claude and Amp are embedded in the binary - no external files needed. Use `ralph prompt claude` or `ralph prompt amp` to inspect them.
 
-| Feature | ralph.sh | ralf |
-|---------|----------|------|
-| Tool selection (`--tool amp\|claude`) | Yes | Yes |
+The prompts instruct the AI to:
+- Read prd.json and progress.txt from the current directory
+- Pick the highest priority user story where `passes: false`
+- Implement that story, run quality checks, commit
+- Update prd.json to mark the story as complete
+- Append progress to progress.txt
+- Output `<promise>COMPLETE</promise>` when all stories pass
+
+## Compatibility with original ralph
+
+| Feature | ralph.sh | ralph (Go) |
+|---------|----------|------------|
+| Tool selection (`--tool`) | Yes | Yes |
 | Max iterations argument | Yes | Yes |
-| PRD loading (`prd.json`) | Yes | Yes |
-| User Stories support | Partially | **Full** |
+| PRD loading | Yes | Yes |
 | Branch-based archiving | Yes | Yes |
-| Progress file initialization | Yes | Yes |
+| Progress file | Yes | Yes |
 | Completion detection | Yes | Yes |
-| Explicit `init` command | No | **Yes** |
-| Self-contained (no external templates) | No | **Yes** |
-| ASCII banner & Status UI | No | **Yes** |
-| Docker-style progress & Spinner | No | **Yes** |
-| Colored output & Time tracking | No | **Yes** |
+| `init` command | No | Yes |
+| `prompt` command | No | Yes |
+| Self-contained binary | No | Yes |
+| ASCII banner & UI | No | Yes |
+| Progress bar & Spinner | No | Yes |
+| Colored output | No | Yes |
 
 Default tool changed from `amp` to `claude`.
+
+## Documentation
+
+See [docs/SKILL.md](docs/SKILL.md) for detailed documentation including:
+- PRD format and field descriptions
+- How the agent works step by step
+- Tips for writing effective user stories
+- Architecture overview
+
+## Project Structure
+
+```
+cmd/ralph/
+  main.go           # Entry point, main loop
+  config.go         # CLI parsing
+  prd.go            # PRD/progress file handling
+  tool.go           # Tool execution
+  tool_claude.go    # Claude prompt (embedded)
+  tool_amp.go       # Amp prompt (embedded)
+  ui.go             # Terminal UI
+  version.go        # Version
+```
