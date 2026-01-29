@@ -7,6 +7,17 @@ Started: 2026-01-29
 - Global ~/.gitignore ignores prd.json, CLAUDE.md, progress.txt - use `git add -f` to force add them
 ---
 
+## 2026-01-29 - US-006
+- What was implemented: AI tool execution with runTool() function
+- Files changed: cmd/ralf/main.go, prd.json
+- **Learnings for future iterations:**
+  - runTool() reads prompt.md for amp, CLAUDE.md for claude
+  - Uses exec.Command with stdin pipe for input
+  - io.MultiWriter tees output to both stderr and buffer for capture
+  - amp flags: --dangerously-allow-all
+  - claude flags: --dangerously-skip-permissions --print
+---
+
 ## 2026-01-29 - US-005
 - What was implemented: Archive previous run when branch changes
 - Files changed: prd.json (marked complete - implementation was already in place)
