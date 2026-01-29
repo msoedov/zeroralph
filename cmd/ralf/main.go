@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-var version = "0.1.0"
 
 func main() {
 	cfg, err := parseArgs(os.Args[1:])

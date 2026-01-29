@@ -1,5 +1,7 @@
 # ralf
 
+![ralf demo](docs/demo.png)
+
 Autonomous AI agent loop. Runs Claude or Amp in iterations until task completion.
 
 This is a Go reimplementation of [snarktank/ralph](https://github.com/snarktank/ralph), rewritten in Go for simplicity of setup and portability.
