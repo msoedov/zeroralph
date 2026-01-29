@@ -60,14 +60,16 @@ ralf --tool amp         # Run with amp, 10 iterations
 
 `ralf` is completely self-contained. It can initialize a new workspace using its embedded templates.
 
-- `prd.json` - Project configuration with fields:
+By default, `ralf` stores its configuration and progress tracking files in a hidden directory: `.claude/ralf/`. This keeps your project root clean.
+
+- `.claude/ralf/prd.json` - Project configuration with fields:
   - `project` - Project name
   - `branchName` - Git branch name
   - `description` - Feature description
   - `userStories` - List of tasks for the agent
-- `CLAUDE.md` - Instructions for Claude (when using `--tool claude`)
-- `prompt.md` - Instructions for Amp (when using `--tool amp`)
-- `AGENTS.md` - General guidelines for the agents
+- `.claude/ralf/CLAUDE.md` - Instructions for Claude (when using `--tool claude`)
+- `.claude/ralf/prompt.md` - Instructions for Amp (when using `--tool amp`)
+- `.claude/ralf/AGENTS.md` - General guidelines for the agents
 
 ### prd.json example
 

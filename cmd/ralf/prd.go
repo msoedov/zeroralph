@@ -53,6 +53,11 @@ func loadPRD(scriptDir string) (*prd, error) {
 }
 
 func initMissingFiles(scriptDir string) error {
+	// Ensure directory exists
+	if err := os.MkdirAll(scriptDir, 0755); err != nil {
+		return fmt.Errorf("creating script directory %s: %w", scriptDir, err)
+	}
+
 	// Files to initialize if missing
 	files := []struct {
 		name     string
@@ -66,11 +71,12 @@ func initMissingFiles(scriptDir string) error {
 
 	for _, f := range files {
 		targetPath := filepath.Join(scriptDir, f.name)
+		logInfo("Initializing %s...", f.name)
+
 		if _, err := os.Stat(targetPath); err == nil {
 			continue // Already exists
 		}
 
-		logInfo("Initializing %s...", f.name)
 		content, err := templates.ReadFile(f.template)
 		if err != nil {
 			return fmt.Errorf("reading template for %s: %w", f.name, err)

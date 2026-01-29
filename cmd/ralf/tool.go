@@ -32,7 +32,7 @@ func runTool(cfg *config) (string, error) {
 		cmd = exec.Command("claude", "--dangerously-skip-permissions", "--print")
 	}
 
-	cmd.Dir = cfg.scriptDir
+	cmd.Dir, _ = os.Getwd()
 
 	var outputBuf bytes.Buffer
 	teeWriter := io.MultiWriter(os.Stderr, &outputBuf)

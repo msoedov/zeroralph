@@ -72,6 +72,20 @@ func TestParseArgs(t *testing.T) {
 			wantTool:    "claude",
 			wantMaxIter: 20,
 		},
+		{
+			name:        "skills command prd",
+			args:        []string{"skills", "prd"},
+			wantCmd:     "skills",
+			wantTool:    "prd",
+			wantMaxIter: 10,
+		},
+		{
+			name:        "skills command ralph",
+			args:        []string{"skills", "ralph"},
+			wantCmd:     "skills",
+			wantTool:    "ralph",
+			wantMaxIter: 10,
+		},
 	}
 
 	for _, tt := range tests {

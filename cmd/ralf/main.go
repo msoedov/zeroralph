@@ -30,6 +30,19 @@ func main() {
 		os.Exit(0)
 	}
 
+	if cfg.command == "skills" {
+		skillName := cfg.tool
+		skillPath := fmt.Sprintf("templates/skills/%s/SKILL.md", skillName)
+		content, err := templates.ReadFile(skillPath)
+		if err != nil {
+			logError("Skill %q not found or error loading it", skillName)
+			fmt.Println("\nAvailable skills: prd, ralph")
+			os.Exit(1)
+		}
+		fmt.Println(string(content))
+		os.Exit(0)
+	}
+
 	p, err := loadPRD(scriptDir)
 	if err != nil {
 		logError("%v", err)

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -29,6 +30,9 @@ func parseArgs(args []string) (*config, error) {
 		case "run":
 			cfg.command = "run"
 			i = 1
+		case "skills":
+			cfg.command = "skills"
+			i = 1
 		}
 	}
 
@@ -50,14 +54,17 @@ func parseArgs(args []string) (*config, error) {
 		case len(arg) > 7 && arg[:7] == "--tool=":
 			cfg.tool = arg[7:]
 		default:
-			if n, err := strconv.Atoi(arg); err == nil && n > 0 {
+			if cfg.command == "skills" && cfg.tool == "claude" {
+				// For skills command, the first positional argument is the skill name
+				cfg.tool = arg
+			} else if n, err := strconv.Atoi(arg); err == nil && n > 0 {
 				cfg.maxIterations = n
 			}
 		}
 		i++
 	}
 
-	if cfg.tool != "amp" && cfg.tool != "claude" {
+	if cfg.command != "skills" && cfg.tool != "amp" && cfg.tool != "claude" {
 		return nil, fmt.Errorf("invalid tool '%s': must be 'amp' or 'claude'", cfg.tool)
 	}
 
@@ -70,8 +77,9 @@ func printUsage() {
 Usage: ralf [command] [--tool amp|claude] [max_iterations]
 
 Commands:
-  run   Start the AI agent loop (default)
-  init  Initialize workspace with templates (prd.json, CLAUDE.md, etc.)
+  run     Start the AI agent loop (default)
+  init    Initialize workspace with templates (prd.json, CLAUDE.md, etc.)
+  skills  Print instructions for a specific skill (prd, ralph)
 
 Options:
   --tool     AI tool to use: amp or claude (default: claude)
@@ -89,5 +97,9 @@ Examples:
 }
 
 func getScriptDir() (string, error) {
-	return os.Getwd()
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(cwd, ".claude", "ralf"), nil
 }
