@@ -20,16 +20,6 @@ func main() {
 	}
 	cfg.workDir = workDir
 
-	// Handle 'init' command
-	if cfg.command == "init" {
-		logInfo("Initializing ralph in %s", workDir)
-		if err := initPRD(workDir); err != nil {
-			logError("%v", err)
-			os.Exit(1)
-		}
-		os.Exit(0)
-	}
-
 	// Handle 'prompt' command
 	if cfg.command == "prompt" {
 		fmt.Println(getPrompt(cfg.tool))
@@ -51,6 +41,11 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Run command - check for CLAUDE.md
+	if !checkClaudeMD(workDir) {
+		logWarning("No CLAUDE.md found - Claude may lack project instructions")
+	}
+
 	// Run command - load PRD
 	logInfo("Working directory: %s", workDir)
 
@@ -62,7 +57,7 @@ func main() {
 
 	if !exists {
 		logWarning("No prd.json found in %s", workDir)
-		logInfo("Run 'ralph init' to create one, or create prd.json manually")
+		logInfo("Use the Ralph skill to convert a markdown PRD to prd.json")
 		logInfo("Continuing without PRD...")
 		p = &prd{Project: "unknown", BranchName: "", Description: "No PRD"}
 	} else {
