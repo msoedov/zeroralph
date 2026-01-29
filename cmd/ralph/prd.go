@@ -175,3 +175,24 @@ func archivePreviousRun(workDir string, p *prd) error {
 
 	return resetProgressFile(workDir)
 }
+
+func cleanWorkDir(workDir string) error {
+	files := []string{"prd.json", "progress.txt", ".ralph-branch"}
+	removed := 0
+	for _, f := range files {
+		path := filepath.Join(workDir, f)
+		err := os.Remove(path)
+		if err == nil {
+			logInfo("Removed %s", f)
+			removed++
+		} else if !os.IsNotExist(err) {
+			return fmt.Errorf("removing %s: %w", f, err)
+		}
+	}
+	if removed > 0 {
+		logSuccess("Cleaned working directory")
+	} else {
+		logInfo("Nothing to clean")
+	}
+	return nil
+}
