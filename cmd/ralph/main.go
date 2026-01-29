@@ -42,6 +42,15 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Handle 'clean' command
+	if cfg.command == "clean" {
+		if err := cleanWorkDir(workDir); err != nil {
+			logError("%v", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
+
 	// Run command - load PRD
 	logInfo("Working directory: %s", workDir)
 

@@ -149,10 +149,10 @@ func printBanner(tool string, maxIter int, p *prd, ver string) {
 	fmt.Printf("      \\______    ________    ________    ______/\n")
 	fmt.Println(`             \/          \/          \/`)
 	fmt.Printf("%s\n", colorReset)
-	fmt.Printf("  %s[WARCHIEF]%s %s%s%s (v%s)\n", colorMuted, colorReset, colorBold, tool, colorReset, ver)
-	fmt.Printf("  %s[MISSION]%s  %s\n", colorMuted, colorReset, p.Project)
-	fmt.Printf("  %s[CLAN]%s     %s%s%s\n", colorMuted, colorReset, colorOrcGold, p.BranchName, colorReset)
-	fmt.Printf("  %s[LIMIT]%s    %d\n\n", colorMuted, colorReset, maxIter)
+	fmt.Printf("  %s[TOOL  ]%s %s%s%s (v%s)\n", colorMuted, colorReset, colorBold, tool, colorReset, ver)
+	fmt.Printf("  %s[GOAL  ]%s  %s\n", colorMuted, colorReset, p.Project)
+	fmt.Printf("  %s[BRANCH]%s     %s%s%s\n", colorMuted, colorReset, colorOrcGold, p.BranchName, colorReset)
+	fmt.Printf("  %s[LIMIT ]%s    %d\n\n", colorMuted, colorReset, maxIter)
 
 	if len(p.UserStories) > 0 {
 		fmt.Printf("  %sTASKS:%s\n", colorBold, colorReset)

@@ -35,6 +35,9 @@ func parseArgs(args []string) (*config, error) {
 		case "skill":
 			cfg.command = "skill"
 			i = 1
+		case "clean":
+			cfg.command = "clean"
+			i = 1
 		}
 	}
 
@@ -86,6 +89,7 @@ Commands:
   init      Initialize prd.json in current directory
   prompt    Print the prompt for a tool (claude or amp)
   skill     Print a skill instruction (prd or ralph)
+  clean     Remove prd.json, progress.txt, and .ralph-branch
 
 Options:
   --tool     AI tool to use: amp or claude (default: claude)
@@ -98,6 +102,7 @@ Arguments:
 Examples:
   ralph                    # Run with claude, 10 iterations
   ralph init               # Create prd.json in current directory
+  ralph clean              # Remove progress files
   ralph prompt claude      # Print the Claude prompt
   ralph prompt amp         # Print the Amp prompt
   ralph skill prd          # Print the PRD generator skill
