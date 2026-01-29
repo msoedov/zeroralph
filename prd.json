@@ -134,7 +134,7 @@
         "Upload binaries as release assets"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": ""
     }
   ]

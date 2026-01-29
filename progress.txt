@@ -7,6 +7,17 @@ Started: 2026-01-29
 - Global ~/.gitignore ignores prd.json, CLAUDE.md, progress.txt - use `git add -f` to force add them
 ---
 
+## 2026-01-29 - US-009
+- What was implemented: GitHub Actions release workflow
+- Files changed: .github/workflows/release.yml, prd.json
+- **Learnings for future iterations:**
+  - Workflow triggers on v* tags
+  - Matrix build for linux/amd64, darwin/amd64, darwin/arm64, windows/amd64
+  - Version injected via -ldflags "-X main.version=${VERSION}"
+  - Uses softprops/action-gh-release for release creation
+  - Binaries named ralf-<os>-<arch>[.exe]
+---
+
 ## 2026-01-29 - US-008
 - What was implemented: Unit tests for core functionality
 - Files changed: cmd/ralf/main_test.go, prd.json
