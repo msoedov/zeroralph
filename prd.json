@@ -1,0 +1,141 @@
+{
+  "project": "ralf",
+  "branchName": "main",
+  "description": "Ralf - Go CLI reimplementation of Ralph autonomous AI agent loop",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Initialize Go project structure",
+      "description": "As a developer, I need a Go module with proper project layout for a CLI tool.",
+      "acceptanceCriteria": [
+        "go.mod file with module name github.com/user/ralf",
+        "main.go in cmd/ralf/",
+        "Basic CLI that prints version with --version flag",
+        "go build succeeds"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Parse command line arguments",
+      "description": "As a user, I want to specify tool type and max iterations via CLI flags.",
+      "acceptanceCriteria": [
+        "Support --tool flag with values: amp, claude (default: amp)",
+        "Support positional max_iterations argument (default: 10)",
+        "Validate tool choice and show error for invalid values",
+        "Show usage/help with --help flag",
+        "go build succeeds"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Load and validate prd.json",
+      "description": "As a user, I need ralf to load the PRD file and extract the branch name.",
+      "acceptanceCriteria": [
+        "Load prd.json from script directory",
+        "Parse JSON and extract branchName field",
+        "Handle missing or invalid prd.json gracefully",
+        "go build succeeds"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Initialize progress.txt file",
+      "description": "As a user, I want progress.txt to be created with a header if it does not exist.",
+      "acceptanceCriteria": [
+        "Create progress.txt with header if missing",
+        "Header includes: '# Ralph Progress Log', timestamp, and separator",
+        "Do not overwrite existing progress.txt",
+        "go build succeeds"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Archive previous run when branch changes",
+      "description": "As a user, I want previous runs archived when I start a new feature branch.",
+      "acceptanceCriteria": [
+        "Detect branch change by comparing prd.json branchName with .last-branch file",
+        "Create archive folder: archive/YYYY-MM-DD-feature-name/",
+        "Copy prd.json and progress.txt to archive",
+        "Reset progress.txt for new run",
+        "Update .last-branch with current branch",
+        "go build succeeds"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Execute AI tool iterations",
+      "description": "As a user, I want ralf to run the AI tool (amp or claude) for each iteration.",
+      "acceptanceCriteria": [
+        "Run amp with piped prompt.md input and --dangerously-allow-all flag",
+        "Run claude with --dangerously-skip-permissions --print flags and CLAUDE.md input",
+        "Stream output to stderr in real-time",
+        "Capture output for completion detection",
+        "go build succeeds"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Detect completion and iteration loop",
+      "description": "As a user, I want ralf to stop when all tasks complete or max iterations reached.",
+      "acceptanceCriteria": [
+        "Check output for <promise>COMPLETE</promise> marker",
+        "Exit with success (0) when completion detected",
+        "Exit with failure (1) when max iterations reached without completion",
+        "Print iteration number and status during loop",
+        "2-second delay between iterations",
+        "go build succeeds"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Add unit tests for core functionality",
+      "description": "As a developer, I need tests to ensure ralf works correctly.",
+      "acceptanceCriteria": [
+        "Tests for CLI argument parsing",
+        "Tests for prd.json loading",
+        "Tests for progress.txt initialization",
+        "Tests for archive detection logic",
+        "Tests for completion detection",
+        "go test ./... passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Set up GitHub Actions for releases",
+      "description": "As a maintainer, I want automated builds and releases on GitHub.",
+      "acceptanceCriteria": [
+        "GitHub workflow file at .github/workflows/release.yml",
+        "Build binaries for linux/amd64, darwin/amd64, darwin/arm64, windows/amd64",
+        "Trigger on version tags (v*)",
+        "Upload binaries as release assets"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

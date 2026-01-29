@@ -1,0 +1,16 @@
+# Binary
+/ralf
+*.exe
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Test cache
+.test/
+
+# Local files
+.last-branch
