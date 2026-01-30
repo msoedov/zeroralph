@@ -2,10 +2,15 @@
 
 Autonomous AI agent loop. Runs Claude or Amp in iterations until task completion.
 
+
 This is a Go reimplementation of [snarktank/ralph](https://github.com/snarktank/ralph), rewritten for simplicity of setup - single binary, no external dependencies or template files.
 
 
 Zero Ralph is a zero-config / file dependency version of Ralph.
+
+
+
+<img src="docs/demo.png" width="400" alt="demo">
 
 ## Installation
 
