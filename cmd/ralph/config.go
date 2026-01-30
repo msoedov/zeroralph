@@ -35,6 +35,9 @@ func parseArgs(args []string) (*config, error) {
 		case "clean":
 			cfg.command = "clean"
 			i = 1
+		case "setup":
+			cfg.command = "setup"
+			i = 1
 		}
 	}
 
@@ -85,6 +88,7 @@ Commands:
   run       Start the AI agent loop (default)
   prompt    Print the prompt for a tool (claude or amp)
   skill     Print a skill instruction (prd or ralph)
+  setup     Print first-time setup commands for Claude skills
   clean     Remove prd.json, progress.txt, and .ralph-branch
 
 Options:

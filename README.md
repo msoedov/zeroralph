@@ -1,25 +1,25 @@
-# ralph
+# zero ralph
 
 Autonomous AI agent loop. Runs Claude or Amp in iterations until task completion.
 
 This is a Go reimplementation of [snarktank/ralph](https://github.com/snarktank/ralph), rewritten for simplicity of setup - single binary, no external dependencies or template files.
 
+
+Zero Ralph is a zero-config / file dependency version of Ralph.
+
 ## Installation
 
-### From releases
-
-Download the binary for your platform from [releases](https://github.com/msoedov/ralph/releases).
 
 ### From source
 
 ```bash
-go install github.com/msoedov/ralph/cmd/ralph@latest
+go install github.com/msoedov/zeroralph/cmd/ralph@latest
 ```
 
 Or build locally:
 
 ```bash
-go build -o ralph ./cmd/ralph/
+go install ./cmd/ralph/
 ```
 
 ## Usage
@@ -31,9 +31,10 @@ ralph [command] [--tool amp|claude] [max_iterations]
 ### Commands
 
 - `run` - Start the AI agent loop (default)
-- `init` - Create prd.json in current directory
 - `prompt` - Print the embedded prompt for a tool (claude or amp)
 - `skill` - Print a skill instruction (prd or ralph)
+- `setup` - Print first-time setup commands for Claude skills
+- `clean` - Remove prd.json, progress.txt, and .ralph-branch
 
 ### Options
 
@@ -49,7 +50,8 @@ ralph [command] [--tool amp|claude] [max_iterations]
 
 ```bash
 ralph                    # Run with claude, 10 iterations
-ralph init               # Create prd.json in current directory
+ralph setup              # Print first-time setup commands
+ralph clean              # Remove progress files
 ralph prompt claude      # Print the Claude prompt to stdout
 ralph prompt amp         # Print the Amp prompt to stdout
 ralph skill prd          # Print the PRD generator skill
@@ -64,7 +66,6 @@ All files are stored in the **current working directory** (where you run ralph):
 
 | File | Description |
 |------|-------------|
-| `prd.json` | Project configuration (created by `ralph init`) |
 | `progress.txt` | Progress log (created automatically on first run) |
 | `archive/` | Previous runs archived when branch changes |
 | `.ralph-branch` | Tracks the last used branch |
@@ -140,9 +141,10 @@ ralph skill ralph | claude
 | Branch-based archiving | Yes | Yes |
 | Progress file | Yes | Yes |
 | Completion detection | Yes | Yes |
-| `init` command | No | Yes |
 | `prompt` command | No | Yes |
 | `skill` command | No | Yes |
+| `setup` command | No | Yes |
+| `clean` command | No | Yes |
 | Self-contained binary | No | Yes |
 | ASCII banner & UI | No | Yes |
 | Progress bar & Spinner | No | Yes |

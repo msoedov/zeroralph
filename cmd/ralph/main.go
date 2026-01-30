@@ -41,6 +41,12 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Handle 'setup' command
+	if cfg.command == "setup" {
+		printSetup()
+		os.Exit(0)
+	}
+
 	// Run command - check for CLAUDE.md
 	if !checkClaudeMD(workDir) {
 		logWarning("No CLAUDE.md found - Claude may lack project instructions")

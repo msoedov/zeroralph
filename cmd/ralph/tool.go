@@ -75,3 +75,11 @@ func runTool(cfg *config) (string, error) {
 func containsCompletion(output string) bool {
 	return strings.Contains(output, "<promise>COMPLETE</promise>")
 }
+
+func printSetup() {
+	println("# Run the following commands:")
+	println("mkdir -p ~/.claude/skills/ralph-prd")
+	println("ralph skill prd > ~/.claude/skills/ralph-prd/SKILL.md")
+	println("mkdir -p ~/.claude/skills/ralph-ralph")
+	println("ralph skill ralph > ~/.claude/skills/ralph-ralph/SKILL.md")
+}
