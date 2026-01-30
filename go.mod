@@ -1,3 +1,3 @@
-module github.com/msoedov/ralph
+module github.com/msoedov/zeroralph
 
 go 1.22
